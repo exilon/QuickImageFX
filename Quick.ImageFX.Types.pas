@@ -7,7 +7,7 @@
   Author      : Kike Pérez
   Version     : 3.0
   Created     : 10/04/2013
-  Modified    : 29/11/2017
+  Modified    : 30/11/2017
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 

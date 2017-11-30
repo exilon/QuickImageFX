@@ -7,7 +7,7 @@
   Author      : Kike Pérez
   Version     : 3.5
   Created     : 10/04/2016
-  Modified    : 29/11/2017
+  Modified    : 30/11/2017
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -70,14 +70,7 @@ const
 
 type
 
-  TOCVParam = record
-    Parameter : Integer;
-    Value : Integer;
-    i : Integer;
-    a : Integer;
-  public
-    procedure SetValue(aParameter,aValue : Integer);
-  end;
+  TOCVParam = array of Integer;
 
   POCVParam = ^TOCVParam;
 
@@ -167,13 +160,6 @@ type
 
 
 implementation
-
-
-procedure TOCVParam.SetValue(aParameter, aValue : Integer);
-begin
-  Parameter := aParameter;
-  Value := aValue;
-end;
 
 
 constructor TImageFX.Create;
@@ -1418,19 +1404,17 @@ end;
 procedure TImageFX.SaveToStream(stream : TStream; imgFormat : TImageFormat = ifJPG);
 var
   mat : pCvMat;
-  param : POCVParam;
+  params : TOCVParam;
 begin
-  New(Param);
-  if imgFormat = ifJPG then param.SetValue(CV_IMWRITE_JPEG_QUALITY,JPGQualityPercent)
-    else if imgFormat = ifPNG then param.SetValue(CV_IMWRITE_PNG_COMPRESSION,PNGCompressionLevel);
-  mat := cvEncodeImage(AsPAnsiChar(GetImageFmtExt(imgFormat)),fOCVImage,Pointer(param));
+  if imgFormat = ifJPG then params := [CV_IMWRITE_JPEG_QUALITY, JPGQualityPercent, 0]
+    else if imgFormat = ifPNG then params := [CV_IMWRITE_PNG_COMPRESSION, PNGCompressionLevel, 0];
+  mat := cvEncodeImage(AsPAnsiChar(GetImageFmtExt(imgFormat)),fOCVImage,@params[0]);
   try
     stream.WriteData(mat.data.ptr,mat.step * mat.rows);
     stream.Seek(soFromBeginning,0);
   finally
     cvReleaseMat(mat);
   end;
-  Dispose(param);
 end;
 
 procedure TImageFX.SaveToStreamWithoutCompression(stream : TStream; imgFormat : TImageFormat = ifJPG);
