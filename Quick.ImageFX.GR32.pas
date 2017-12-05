@@ -7,7 +7,7 @@
   Author      : Kike Pérez
   Version     : 3.0
   Created     : 10/04/2013
-  Modified    : 29/11/2017
+  Modified    : 05/12/2017
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -606,21 +606,21 @@ begin
         if fBitmap.Width > fBitmap.Height then
         begin
           nw := w;
-          nh := Trunc(w / srcRatio);
+          nh := Round(w / srcRatio);
           if nh > h then //too big
           begin
             nh := h;
-            nw := Trunc(h * srcRatio);
+            nw := Round(h * srcRatio);
           end;
         end
         else
         begin
           nh := h;
-          nw := Trunc(h * srcRatio);
+          nw := Round(h * srcRatio);
           if nw > w then //too big
           begin
             nw := w;
-            nh := Trunc(w / srcRatio);
+            nh := Round(w / srcRatio);
           end;
         end;
         srcRect := Rect(0,0,fBitmap.Width,fBitmap.Height);
