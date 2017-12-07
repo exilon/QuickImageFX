@@ -10,14 +10,18 @@ Delphi library for simplifying image load/save, conversion and transformation. C
 You need to add one of below units to your uses clause to select the engine you want to use:
 
 > **Quick.ImageFX.GDI:** Uses GDI+ engine. No needs external libraries but it's slow.
+> Needed libraries:
+> QuickLibs from Exilon (https://github.com/exilon/QuickLibs)
 >   
 > **Quick.ImageFX.GR32:** Uses Graphics32 engine to rotate, transform, resize, etc
 > Needed libraries:
+> QuickLibs from Exilon (https://github.com/exilon/QuickLibs)
 > Graphics32 (https://github.com/graphics32/graphics32)
 > CCR-Exif from Chris Rolliston (https://code.google.com/archive/p/ccr-exif)   
 > 
 > **Quick.ImageFX.OpenCV:** OpenCV Engine. Uses a thrid party delphi warper for Intel Open Vision library. It's very fast and powerfull. Needs OpenCV external dll's in your project dir.
 > Needed libraries:  
+> QuickLibs from Exilon (https://github.com/exilon/QuickLibs)
 > Delphi-OpenCV from Laex (https://github.com/Laex/Delphi-OpenCV).  
 > CCR-Exif from Chris Rolliston (https://code.google.com/archive/p/ccr-exif)
 
