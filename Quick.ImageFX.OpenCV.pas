@@ -7,7 +7,7 @@
   Author      : Kike Pérez
   Version     : 3.5
   Created     : 10/04/2016
-  Modified    : 05/12/2017
+  Modified    : 07/12/2017
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -114,7 +114,7 @@ type
     function IsGray : Boolean;
     function Clear(pcolor : TColor = clWhite) : TImageFX;
     function Resize(w, h : Integer) : TImageFX; overload;
-    function Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rmLinear) : TImageFX; overload;
+    function Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : TImageFX; overload;
     function DrawCentered(png : TPngImage; alpha : Double = 1) : TImageFX; overload;
     function DrawCentered(stream: TStream; alpha : Double = 1) : TImageFX; overload;
     function Draw(png : TPngImage; x, y : Integer; alpha : Double = 1) : TImageFX; overload;
@@ -734,16 +734,16 @@ begin
 
   //selects resampler algorithm
   case ResizeOptions.ResamplerMode of
-    rmAuto :
+    rsAuto :
       begin
         if (w < fOCVImage.Width ) or (h < fOCVImage.Height) then Resampler := CV_INTER_AREA
           else Resampler := CV_INTER_LINEAR;
       end;
-    rmNearest : Resampler := CV_INTER_NN;
-    rmOCVArea : Resampler := CV_INTER_AREA;
-    rmLinear : Resampler := CV_INTER_LINEAR;
-    rmOCVCubic : Resampler := CV_INTER_CUBIC;
-    rmOCVLanczos4 : Resampler := CV_INTER_LANCZOS4;
+    rsNearest : Resampler := CV_INTER_NN;
+    rsOCVArea : Resampler := CV_INTER_AREA;
+    rsLinear : Resampler := CV_INTER_LINEAR;
+    rsOCVCubic : Resampler := CV_INTER_CUBIC;
+    rsOCVLanczos4 : Resampler := CV_INTER_LANCZOS4;
     else Resampler := CV_INTER_LINEAR;
   end;
 
@@ -777,7 +777,7 @@ begin
   Result := ResizeImage(w,h,ResizeOptions);
 end;
 
-function TImageFX.Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rmLinear) : TImageFX;
+function TImageFX.Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : TImageFX;
 var
   lResizeOptions : TResizeOptions;
 begin

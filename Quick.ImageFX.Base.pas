@@ -7,7 +7,7 @@
   Author      : Kike Pérez
   Version     : 3.0
   Created     : 21/11/2017
-  Modified    : 29/11/2017
+  Modified    : 07/12/2017
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -87,7 +87,7 @@ type
     function IsGray : Boolean; virtual; abstract;
     function Clear(pcolor : TColor = clWhite) : TImageFX; virtual; abstract;
     function Resize(w, h : Integer) : TImageFX; overload; virtual; abstract;
-    function Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rmLinear) : TImageFX; overload; virtual; abstract;
+    function Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : TImageFX; overload; virtual; abstract;
     function DrawCentered(png : TPngImage; alpha : Double = 1) : TImageFX; overload; virtual; abstract;
     function DrawCentered(stream: TStream; alpha : Double = 1) : TImageFX; overload; virtual; abstract;
     function Draw(png : TPngImage; x, y : Integer; alpha : Double = 1) : TImageFX; overload; virtual; abstract;
@@ -151,7 +151,7 @@ begin
   ResizeOptions := TResizeOptions.Create;
   ResizeOptions.NoMagnify := False;
   ResizeOptions.ResizeMode := rmStretch;
-  ResizeOptions.ResamplerMode := rmAuto;
+  ResizeOptions.ResamplerMode := rsAuto;
   ResizeOptions.Center := False;
   ResizeOptions.FillBorders := False;
   ResizeOptions.BorderColor := clWhite;

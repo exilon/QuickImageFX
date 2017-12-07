@@ -7,7 +7,7 @@
   Author      : Kike Pérez
   Version     : 3.0
   Created     : 10/04/2013
-  Modified    : 30/11/2017
+  Modified    : 07/12/2017
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -89,15 +89,15 @@ type
                  rmFitToBounds  //resize image to fit max bounds of target size
                  );
 
-  TResamplerMode = (rmAuto, //uses rmArea for downsampling and rmLinear for upsampling
-                    rmGDIStrech, //used only by GDI
-                    rmNearest, //low quality - High performance
-                    rmGR32Draft,   //medium quality - High performance (downsampling only)
-                    rmOCVArea,   //medium quality - High performance (downsampling only)
-                    rmLinear,  // medium quality - Medium performance
-                    rmGR32Kernel, //high quality - Low performance (depends on kernel width)
-                    rmOCVCubic,
-                    rmOCVLanczos4); //high quality - Low performance
+  TResamplerMode = (rsAuto, //uses rmArea for downsampling and rmLinear for upsampling
+                    rsGDIStrech, //used only by GDI
+                    rsNearest, //low quality - High performance
+                    rsGR32Draft,   //medium quality - High performance (downsampling only)
+                    rsOCVArea,   //medium quality - High performance (downsampling only)
+                    rsLinear,  // medium quality - Medium performance
+                    rsGR32Kernel, //high quality - Low performance (depends on kernel width)
+                    rsOCVCubic,
+                    rsOCVLanczos4); //high quality - Low performance
 
   TResizeOptions = class
     NoMagnify : Boolean;
@@ -152,7 +152,7 @@ type
   IImageFXTransform = interface
   ['{8B7B6447-8DFB-40F5-B729-0E2F34EB3F2F}']
     function Resize(w, h : Integer) : TImageFX; overload;
-    function Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rmLinear) : TImageFX; overload;
+    function Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : TImageFX; overload;
     function Rotate90 : TImageFX;
     function Rotate180 : TImageFX;
     function Rotate270 : TImageFX;

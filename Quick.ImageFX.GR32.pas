@@ -7,7 +7,7 @@
   Author      : Kike Pérez
   Version     : 3.0
   Created     : 10/04/2013
-  Modified    : 05/12/2017
+  Modified    : 07/12/2017
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -120,7 +120,7 @@ type
     class function GetAspectRatio(cWidth, cHeight : Integer) : string;
     function Clear : TImageFX;
     function Resize(w, h : Integer) : TImageFX; overload;
-    function Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rmLinear) : TImageFX; overload;
+    function Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : TImageFX; overload;
     function Draw(png : TPngImage; alpha : Double = 1) : TImageFX; overload;
     function Draw(png : TPngImage; x, y : Integer; alpha : Double = 1) : TImageFX; overload;
     function Draw(stream: TStream; x: Integer; y: Integer; alpha: Double = 1) : TImageFX; overload;
@@ -667,15 +667,15 @@ begin
 
   //selects resampler algorithm
   case ResizeOptions.ResamplerMode of
-    rmAuto :
+    rsAuto :
       begin
         if (w < fBitmap.Width ) or (h < fBitmap.Height) then Resam := TDraftResampler.Create
           else Resam := TLinearResampler.Create;
       end;
-    rmNearest : Resam := TNearestResampler.Create;
-    rmGR32Draft : Resam := TDraftResampler.Create;
-    rmGR32Kernel : Resam := TKernelResampler.Create;
-    rmLinear : Resam := TLinearResampler.Create;
+    rsNearest : Resam := TNearestResampler.Create;
+    rsGR32Draft : Resam := TDraftResampler.Create;
+    rsGR32Kernel : Resam := TKernelResampler.Create;
+    rsLinear : Resam := TLinearResampler.Create;
     else Resam := TKernelResampler.Create;
   end;
 
@@ -705,7 +705,7 @@ begin
   Result := ResizeImage(w,h,ResizeOptions);
 end;
 
-function TImageFX.Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rmLinear) : TImageFX;
+function TImageFX.Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : TImageFX;
 var
   ResizeOptions : TResizeOptions;
 begin

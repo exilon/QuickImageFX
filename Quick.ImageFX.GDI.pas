@@ -7,7 +7,7 @@
   Author      : Kike Pérez
   Version     : 3.0
   Created     : 10/05/2013
-  Modified    : 05/12/2017
+  Modified    : 07/12/2017
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -107,7 +107,7 @@ type
     function LoadFromResource(ResourceName : string) : TImageFX;
     function LoadFromHTTP(urlImage : string; out HTTPReturnCode : Integer; RaiseExceptions : Boolean = False) : TImageFX;
     function Resize(w, h : Integer) : TImageFX; overload;
-    function Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rmLinear) : TImageFX; overload;
+    function Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : TImageFX; overload;
     function Resize2(x, y : Integer; NoResizeIfSmaller : Boolean = False) : TImageFX;
     function Draw(png : TPngImage; alpha : Double = 1) : TImageFX; overload;
     function Draw(png : TPngImage; x, y : Integer; alpha : Double = 1) : TImageFX; overload;
@@ -512,7 +512,7 @@ begin
   else tgtRect := Rect(0,0,nw,nh);
 
   //selects resampler algorithm
-  if not (ResizeOptions.ResamplerMode in [rmAuto,rmGDIStrech]) then raise Exception.Create('Only GDIStrech Resampler mode supported!');
+  if not (ResizeOptions.ResamplerMode in [rsAuto,rsGDIStrech]) then raise Exception.Create('Only GDIStrech Resampler mode supported!');
 
   bmp := TBitmap.Create;
   try
@@ -541,7 +541,7 @@ begin
   Result := ResizeImage(w,h,ResizeOptions);
 end;
 
-function TImageFX.Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rmLinear) : TImageFX;
+function TImageFX.Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : TImageFX;
 var
   ResizeOptions : TResizeOptions;
 begin
