@@ -1,13 +1,13 @@
 { ***************************************************************************
 
-  Copyright (c) 2013-2017 Kike Pérez
+  Copyright (c) 2013-2018 Kike Pérez
 
   Unit        : Quick.ImageFX.GR32
   Description : Image manipulation with GR32
   Author      : Kike Pérez
   Version     : 3.0
   Created     : 10/04/2013
-  Modified    : 07/12/2017
+  Modified    : 17/01/2018
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -295,12 +295,12 @@ var
 begin
   Result := Self;
 
-  if not Assigned(stream) then
+  if (not Assigned(stream)) or (stream.Size < 1024) then
   begin
     LastResult := arZeroBytes;
     Exit;
   end;
-
+  stream.Seek(0,soBeginning);
   if not FindGraphicClass(Stream, GraphicClass) then raise EInvalidGraphic.Create('Unknow Graphic format');
   Graphic := GraphicClass.Create;
   try
@@ -534,6 +534,7 @@ var
   nw, nh : Integer;
 begin
   Result := Self;
+  LastResult := arResizeError;
 
   if (not Assigned(fBitmap)) or ((fBitmap.Width * fBitmap.Height) = 0) then
   begin
@@ -545,18 +546,29 @@ begin
   //if any value is 0, calculates proportionaly
   if (w * h) = 0 then
   begin
-    ResizeOptions.ResizeMode := rmFitToBounds;
-    if w > h then
+    //scales max w or h
+    if ResizeOptions.ResizeMode = rmScale then
     begin
-      nh := (w * fBitmap.Height) div fBitmap.Width;
-      h := nh;
-      nw := w;
+      if (h = 0) and (fBitmap.Height > fBitmap.Width) then
+      begin
+        h := w;
+        w := 0;
+      end;
     end
-    else
+    else ResizeOptions.ResizeMode := rmFitToBounds;
     begin
-      nw := (h * fBitmap.Width) div fBitmap.Height;
-      w := nw;
-      nh := h;
+      if w > h then
+      begin
+        nh := (w * fBitmap.Height) div fBitmap.Width;
+        h := nh;
+        nw := w;
+      end
+      else
+      begin
+        nw := (h * fBitmap.Width) div fBitmap.Height;
+        w := nw;
+        nh := h;
+      end;
     end;
   end;
 
