@@ -1,13 +1,13 @@
 { ***************************************************************************
 
-  Copyright (c) 2016-2017 Kike Pérez
+  Copyright (c) 2016-2018 Kike Pérez
 
   Unit        : Quick.ImageFX.OpenCV
   Description : Image manipulation with OpenCV
   Author      : Kike Pérez
   Version     : 3.5
   Created     : 10/04/2016
-  Modified    : 07/12/2017
+  Modified    : 17/01/2018
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -309,7 +309,7 @@ begin
   Result := Self;
   ExifData := nil;
 
-  if not Assigned(stream) then
+  if (not Assigned(stream)) or (stream.Size < 1024) then
   begin
     LastResult := arZeroBytes;
     Exit;
@@ -612,18 +612,29 @@ begin
   //if any value is 0, calculates proportionaly
   if (w * h) = 0 then
   begin
-    ResizeOptions.ResizeMode := rmFitToBounds;
-    if w > h then
+    //scales max w or h
+    if ResizeOptions.ResizeMode = rmScale then
     begin
-      nh := (w * fOCVImage.Height) div fOCVImage.Width;
-      h := nh;
-      nw := w;
+      if (h = 0) and (fOCVImage.Height > fOCVImage.Width) then
+      begin
+        h := w;
+        w := 0;
+      end;
     end
-    else
+    else ResizeOptions.ResizeMode := rmFitToBounds;
     begin
-      nw := (h * fOCVImage.Width) div fOCVImage.Height;
-      w := nw;
-      nh := h;
+      if w > h then
+      begin
+        nh := (w * fOCVImage.Height) div fOCVImage.Width;
+        h := nh;
+        nw := w;
+      end
+      else
+      begin
+        nw := (h * fOCVImage.Width) div fOCVImage.Height;
+        w := nw;
+        nh := h;
+      end;
     end;
   end;
 
