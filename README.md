@@ -8,26 +8,32 @@ Delphi library for simplifying image load/save, conversion and transformation. C
 ----------
 You need to add one of below units to your uses clause to select the engine you want to use:
 
-> - **Quick.ImageFX.GDI:** Uses GDI+ engine. No needs external libraries but it's slow.
-> Needed libraries:
-> QuickLibs from Exilon (https://github.com/exilon/QuickLibs)
->   
-> - **Quick.ImageFX.GR32:** Uses Graphics32 engine to rotate, transform, resize, etc
-> Needed libraries:
-> QuickLibs from Exilon (https://github.com/exilon/QuickLibs)
-> Graphics32 (https://github.com/graphics32/graphics32)
-> CCR-Exif from Chris Rolliston (https://code.google.com/archive/p/ccr-exif)   
-> 
-> - **Quick.ImageFX.OpenCV:** OpenCV Engine. Uses a thrid party delphi warper for Intel Open Vision library. It's very fast and powerfull. Needs OpenCV external dll's in your project dir.
-> Needed libraries:  
-> QuickLibs from Exilon (https://github.com/exilon/QuickLibs)
-> Delphi-OpenCV from Laex (https://github.com/Laex/Delphi-OpenCV).  
-> CCR-Exif from Chris Rolliston (https://code.google.com/archive/p/ccr-exif)
+- **Quick.ImageFX.GDI:** Uses GDI+ engine. No needs external libraries but it's slow.
+	
+    Needed libraries:
+    
+    - QuickLibs from Exilon (https://github.com/exilon/QuickLibs)
+   
+- **Quick.ImageFX.GR32:** Uses Graphics32 engine to rotate, transform, resize, etc
+
+	Needed libraries:
+    
+	- QuickLibs from Exilon (https://github.com/exilon/QuickLibs)
+	- Graphics32 (https://github.com/graphics32/graphics32)
+	- CCR-Exif from Chris Rolliston (https://code.google.com/archive/p/ccr-exif)   
+ 
+- **Quick.ImageFX.OpenCV:** OpenCV Engine. Uses a thrid party delphi warper for Intel Open Vision library. It's very fast and powerfull. Needs OpenCV external dll's in your project dir.
+	
+    Needed libraries:  
+	
+	- QuickLibs from Exilon (https://github.com/exilon/QuickLibs)
+	- Delphi-OpenCV from Laex (https://github.com/Laex/Delphi-OpenCV).  
+	- CCR-Exif from Chris Rolliston (https://code.google.com/archive/p/ccr-exif)
 
 
 **Load/Save:** Can load/save png, jpg, gif and bmp and get image from different resources like file, stream, http, imagelist, associated windows icon, executable file icon, etc...
 
-```pascal
+```delphi
 //Load image from files like jpg, gif, png and bmp
 ImageFX.LoadFromFile('.\file.jpg');
 	
@@ -57,7 +63,7 @@ ImageFX.SaveToString(MyImageString);
 	
 **Image Info:** Get resolution, aspect ratio of an image.
 
-```pascal
+```delphi
 ImageFX.GetResolution(x,y)
 ImageFX.AspectRatioStr //aspect ratio (4:3,16:9)
 ImageFX.IsGray
@@ -65,7 +71,7 @@ ImageFX.IsGray
 		
 **Image Resize:**
 
-```pascal
+```delphi
 //Resize image to fit max bounds of 500x300 and fills rest of target size with a border black color
 ImageFX.ResizeOptions.BorderColor := clBlack; 
 ImageFX.Resize(500,300, rmFitToBounds, [rfCenter], rmLinear);
@@ -108,7 +114,7 @@ ImageFX.Resize(500,300);
 
 **Transforms:** Apply rotations, flips, scanline effects, bright  and others transformations to your images.
 
-```pascal
+```delphi
 //Rotate image 90 degrees
 ImageFX.Rotate90;
     
@@ -137,14 +143,14 @@ ImageFX.DrawCentered(pngimage,0.5);
 
 **Format conversions:** Can convert between image formats.
 
-```pascal
+```delphi
 ImageFX.LoadFromFile('.\myfile.jpg');
 ImageFX.SaveAsPNG('.\myfile.png');
 ```
 
 **Almost all functions return self class, so you can chain many actions and effects like this:**
 
-```pascal
+```delphi
 //Rotate 90 degrees and flip horizontally, convert to grayscale and save to a png file.
 ImageFX.Rotate90.FlipX.GrayScale.SaveToPNG('.\myfile.png');
         
