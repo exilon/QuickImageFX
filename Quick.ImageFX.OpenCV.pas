@@ -7,7 +7,7 @@
   Author      : Kike Pérez
   Version     : 3.5
   Created     : 10/04/2016
-  Modified    : 17/01/2018
+  Modified    : 24/01/2018
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -49,6 +49,7 @@ uses
   {$ENDIF}
   System.UITypes,
   System.Classes,
+  System.Math,
   ocv.utils,
   ocv.highgui_c,
   ocv.core_c,
@@ -627,13 +628,11 @@ begin
       begin
         nh := (w * fOCVImage.Height) div fOCVImage.Width;
         h := nh;
-        nw := w;
       end
       else
       begin
         nw := (h * fOCVImage.Width) div fOCVImage.Height;
         w := nw;
-        nh := h;
       end;
     end;
   end;
@@ -969,13 +968,37 @@ var
   center : TCvPoint2D32f;
   mat : pCvMat;
   ImgAux : pIplImage;
+  w : Single;
+  h : Single;
+  t : Single;
+  newWidth : Integer;
+  newHeight : Integer;
 begin
   Result := Self;
   LastResult := arRotateError;
-  center.x := (fOCVImage.height - 1) / 2;
-  center.y := center.x;
 
-  ImgAux := cvCreateImage(CvSize(fOCVImage^.height,fOCVImage^.width),IPL_DEPTH_8U,fOCVImage^.nChannels);
+  w := fOCVImage^.width;
+  h := fOCVImage^.height;
+  t := (RoundAngle * -1) * Pi / 180;
+
+  if RoundAngle > 90 then
+  begin
+    center.x := w / 2;
+    center.y := center.x;
+  end
+  else
+  begin
+    center.x := h / 2;
+    center.y := center.x;
+  end;
+
+  //calculate rotated bounding box
+  newWidth := Round(sin(t) * h + cos(t) * w);
+  newHeight := Round(sin(t) * w + cos(t) * h);
+  if newWidth < 0 then newWidth := newWidth * -1;
+  if newHeight < 0 then newHeight := newHeight * -1;
+
+  ImgAux := cvCreateImage(CvSize(newWidth,newHeight),IPL_DEPTH_8U,fOCVImage^.nChannels);
   mat := cvCreateMat(2,3,CV_32FC1);
   try
     mat := cv2DRotationMatrix(center,RoundAngle * -1,1.0,mat);
@@ -993,16 +1016,44 @@ end;
 function TImageFX.RotateAngle(RotAngle: Single) : TImageFX;
 var
   center : TCvPoint2D32f;
+  ImgAux : pIplImage;
   mat : pCvMat;
+  w : Integer;
+  h : Integer;
+  t : single;
+  newWidth : Integer;
+  newHeight : Integer;
 begin
   Result := Self;
-  center.x := fOCVImage.width div 2;
-  center.y := fOCVImage.height div 2;
+  w := fOCVImage^.width;
+  h := fOCVImage^.height;
+  t := RotAngle * Pi / 180;
+
+  if RotAngle > 90 then
+  begin
+    center.x := w div 2;
+    center.y := center.x;
+  end
+  else
+  begin
+    center.x := h div 2;
+    center.y := center.x;
+  end;
+
+  //calculate rotated bounding box
+  newWidth := Round(sin(t) * h + cos(t) * w);
+  newHeight := Round(sin(t) * w + cos(t) * h);
+  if newWidth < 0 then newWidth := newWidth * -1;
+  if newHeight < 0 then newHeight := newHeight * -1;
+
+  ImgAux := cvCreateImage(CvSize(newWidth,newHeight),IPL_DEPTH_8U,fOCVImage^.nChannels);
   mat := cvCreateMat(2,3,CV_32FC1);
   try
     LastResult := arRotateError;
     mat := cv2DRotationMatrix(center,RotAngle * -1, 1.0,mat);
-    cvWarpAffine(fOCVImage,fOCVImage,mat,CV_INTER_LINEAR + CV_WARP_FILL_OUTLIERS,cvScalarAll(0));
+    cvWarpAffine(fOCVImage,ImgAux,mat,CV_INTER_LINEAR + CV_WARP_FILL_OUTLIERS,cvScalarAll(0));
+    cvReleaseImage(fOCVImage);
+    fOCVImage := ImgAux;
   finally
     cvReleaseMat(mat);
   end;
