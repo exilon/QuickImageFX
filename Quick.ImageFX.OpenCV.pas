@@ -7,7 +7,7 @@
   Author      : Kike Pérez
   Version     : 3.5
   Created     : 10/04/2016
-  Modified    : 24/01/2018
+  Modified    : 21/02/2018
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -332,33 +332,35 @@ begin
     cvReleaseMat(mat);
   end;
 
-  //read Exif info and rotates image if needed
-  stream.Seek(soFromBeginning,0);
-  ExifData := TExifData.Create;
-  try
-    if ExifData.IsSupportedGraphic(stream) then
-    begin
-      stream.Seek(soFromBeginning,0);
-      ExifData.LoadFromGraphic(stream);
-      ExifData.EnsureEnumsInRange := False;
-      if not ExifData.Empty then
+  if ExifRotation then
+  begin
+    //read Exif info and rotates image if needed
+    stream.Seek(soFromBeginning,0);
+    ExifData := TExifData.Create;
+    try
+      if ExifData.IsSupportedGraphic(stream) then
       begin
-        case ExifData.Orientation of
-          //TExifOrientation.toTopLeft : //Normal
-          TExifOrientation.toTopRight : Self.FlipX; //Mirror horizontal
-          TExifOrientation.toBottomRight : Self.Rotate180; //Rotate 180°
-          TExifOrientation.toBottomLeft : Self.FlipY; //Mirror vertical
-          TExifOrientation.toLeftTop : Self.FlipX.Rotate270; //Mirrow horizontal and rotate 270°
-          TExifOrientation.toRightTop : Self.Rotate90; //Rotate 90°
-          TExifOrientation.toRightBottom : Self.FlipX.Rotate90; //Mirror horizontal and rotate 90°
-          TExifOrientation.toLeftBottom : Self.Rotate270; //Rotate 270°
+        stream.Seek(soFromBeginning,0);
+        ExifData.LoadFromGraphic(stream);
+        ExifData.EnsureEnumsInRange := False;
+        if not ExifData.Empty then
+        begin
+          case ExifData.Orientation of
+            //TExifOrientation.toTopLeft : //Normal
+            TExifOrientation.toTopRight : Self.FlipX; //Mirror horizontal
+            TExifOrientation.toBottomRight : Self.Rotate180; //Rotate 180°
+            TExifOrientation.toBottomLeft : Self.FlipY; //Mirror vertical
+            TExifOrientation.toLeftTop : Self.FlipX.Rotate270; //Mirrow horizontal and rotate 270°
+            TExifOrientation.toRightTop : Self.Rotate90; //Rotate 90°
+            TExifOrientation.toRightBottom : Self.FlipX.Rotate90; //Mirror horizontal and rotate 90°
+            TExifOrientation.toLeftBottom : Self.Rotate270; //Rotate 270°
+          end;
         end;
       end;
+    finally
+      ExifData.Free;
     end;
-  finally
-    ExifData.Free;
   end;
-
   LastResult := arOk;
 end;
 

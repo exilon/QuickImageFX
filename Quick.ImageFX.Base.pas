@@ -1,13 +1,13 @@
 { ***************************************************************************
 
-  Copyright (c) 2016-2017 Kike Pérez
+  Copyright (c) 2016-2018 Kike Pérez
 
   Unit        : Quick.ImageFX.Base
   Description : Image manipulation with GDI
   Author      : Kike Pérez
   Version     : 3.0
   Created     : 21/11/2017
-  Modified    : 07/12/2017
+  Modified    : 21/02/2018
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -54,6 +54,7 @@ type
     fResizeOptions : TResizeOptions;
     fHTTPOptions : THTTPOptions;
     fLastResult : TImageActionResult;
+    fExifRotation : Boolean;
   public
     constructor Create; virtual;
     destructor Destroy; override;
@@ -62,6 +63,7 @@ type
     property ProgressiveJPG : Boolean read fProgressiveJPG write fProgressiveJPG;
     property ResizeOptions : TResizeOptions read fResizeOptions write fResizeOptions;
     property HTTPOptions : THTTPOptions read fHTTPOptions write fHTTPOptions;
+    property ExifRotation : Boolean read fExifRotation write fExifRotation;
     property LastResult : TImageActionResult read fLastResult write fLastResult;
     function FindGraphicClass(const Buffer; const BufferSize: Int64; out GraphicClass: TGraphicClass): Boolean; overload;
     function FindGraphicClass(Stream: TStream; out GraphicClass: TGraphicClass): Boolean; overload;
@@ -162,6 +164,7 @@ begin
   HTTPOptions.AllowCookies := False;
   HTTPOptions.HandleRedirects := True;
   HTTPOptions.MaxRedirects := 10;
+  fExifRotation := True;
 end;
 
 destructor TImageFXBase.Destroy;
