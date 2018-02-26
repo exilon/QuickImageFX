@@ -7,7 +7,7 @@
   Author      : Kike Pérez
   Version     : 3.0
   Created     : 10/04/2013
-  Modified    : 17/01/2018
+  Modified    : 26/02/2018
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -661,8 +661,15 @@ begin
         //all cases no resizes, but CropToFill needs to grow to fill target size
         if ResizeOptions.ResizeMode <> rmCropToFill then
         begin
-          LastResult := arAlreadyOptim;
-          Exit;
+          if ResizeOptions.SkipSmaller then
+          begin
+            LastResult := arAlreadyOptim;
+            nw := srcRect.Width;
+            nh := srcRect.Height;
+            w := nw;
+            h := nh;
+          end
+          else Exit;
         end;
       end;
     end;

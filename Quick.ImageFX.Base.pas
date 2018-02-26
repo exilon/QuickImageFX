@@ -7,7 +7,7 @@
   Author      : Kike Pérez
   Version     : 3.0
   Created     : 21/11/2017
-  Modified    : 21/02/2018
+  Modified    : 26/02/2018
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -157,6 +157,7 @@ begin
   ResizeOptions.Center := False;
   ResizeOptions.FillBorders := False;
   ResizeOptions.BorderColor := clWhite;
+  ResizeOptions.SkipSmaller := True;
   HTTPOptions := THTTPOptions.Create;
   HTTPOptions.UserAgent := DEF_USERAGENT;
   HTTPOptions.ConnectionTimeout := DEF_CONNECTION_TIMEOUT;

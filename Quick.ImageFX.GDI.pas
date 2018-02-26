@@ -495,8 +495,15 @@ begin
         //all cases no resizes, but CropToFill needs to grow to fill target size
         if ResizeOptions.ResizeMode <> rmCropToFill then
         begin
-          LastResult := arAlreadyOptim;
-          Exit;
+          if ResizeOptions.SkipSmaller then
+          begin
+            LastResult := arAlreadyOptim;
+            nw := srcRect.Width;
+            nh := srcRect.Height;
+            w := nw;
+            h := nh;
+          end
+          else Exit;
         end;
       end;
     end;

@@ -1,13 +1,13 @@
 { ***************************************************************************
 
-  Copyright (c) 2016-2017 Kike Pérez
+  Copyright (c) 2016-2018 Kike Pérez
 
   Unit        : Quick.ImageFX.Types
   Description : Image manipulation with multiple graphic libraries
   Author      : Kike Pérez
   Version     : 3.0
   Created     : 10/04/2013
-  Modified    : 07/12/2017
+  Modified    : 26/02/2018
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -106,6 +106,7 @@ type
     Center : Boolean;
     FillBorders : Boolean;
     BorderColor : TColor;
+    SkipSmaller : Boolean; //avoid resize smaller resolution images
   end;
 
   THTTPOptions = class
