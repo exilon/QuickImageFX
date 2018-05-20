@@ -4,6 +4,7 @@
 
 Delphi library for simplifying image load/save, conversion and transformation. Can load/save png, jpg, gif and bmp. Can get image from different resources: file, stream, http, imagelist, associated windows icon, executable file icon, etc... Rotate, flip, grayscale and many other transformations.
 
+*NEW: Delphinus support
 
 ----------
 You need to add one of below units to your uses clause to select the engine you want to use:
