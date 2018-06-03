@@ -5,9 +5,9 @@
   Unit        : Quick.ImageFX.Types
   Description : Image manipulation with multiple graphic libraries
   Author      : Kike Pérez
-  Version     : 3.0
+  Version     : 4.0
   Created     : 10/04/2013
-  Modified    : 26/02/2018
+  Modified    : 27/03/2018
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -67,13 +67,20 @@ type
     EncodeInfo : Byte;
   end;
 
+  EImageError = class(Exception);
+  EImageDrawError = class(Exception);
+  EImageRotationError = class(Exception);
+  EImageResizeError = class(Exception);
+  EImageTransformError = class(Exception);
+  EImageConversionError = class(Exception);
+
+  TImageFormat = (ifBMP, ifJPG, ifPNG, ifGIF);
+
   TImageActionResult = (arNone, arAlreadyOptim, arOk, arUnknowFmtType, arUnknowError, arNoOverwrited, arResizeError, arRotateError,
                         arColorizeError,arConversionError, arFileNotExist, arZeroBytes, arCorruptedData);
 
   TJPGQualityLevel = 1..100;
   TPNGCompressionLevel = 0..9;
-
-  TImageFormat = (ifBMP, ifJPG, ifPNG, ifGIF);
 
   TScanlineMode = (smHorizontal, smVertical);
 
@@ -97,7 +104,9 @@ type
                     rsLinear,  // medium quality - Medium performance
                     rsGR32Kernel, //high quality - Low performance (depends on kernel width)
                     rsOCVCubic,
-                    rsOCVLanczos4); //high quality - Low performance
+                    rsOCVLanczos4,
+                    rsVAMPBicubic,
+                    rsVAMPLanczos); //high quality - Low performance
 
   TResizeOptions = class
     NoMagnify : Boolean;
@@ -118,64 +127,42 @@ type
     ResponseTimeout : Integer;
   end;
 
-  TImageFX = class(TObject);
-
-  IImageFX = interface
-  ['{58BC1417-EC58-472E-A503-92B199C21AE8}']
-    function LoadFromFile(fromfile : string; CheckIfFileExists : Boolean = False) : TImageFX;
-    function LoadFromFile2(fromfile : string; CheckIfFileExists : Boolean = False) : TImageFX;
-    function LoadFromStream(stream : TStream) : TImageFX;
-    function LoadFromString(str : string) : TImageFX;
-    function LoadFromImageList(imgList : TImageList; ImageIndex : Integer) : TImageFX;
-    function LoadFromIcon(Icon : TIcon) : TImageFX;
-    function LoadFromFileIcon(FileName : string; IconIndex : Word) : TImageFX;
-    function LoadFromFileExtension(aFilename : string; LargeIcon : Boolean) : TImageFX;
-    function LoadFromResource(ResourceName : string) : TImageFX;
-    function LoadFromHTTP(urlImage : string; out HTTPReturnCode : Integer; RaiseExceptions : Boolean = False) : TImageFX;
-    procedure GetResolution(var x,y : Integer); overload;
-    function GetResolution : string; overload;
-    function AspectRatio : Double;
-    function AspectRatioStr : string;
-    function Clone : TImageFX;
-    function IsGray : Boolean;
-    function Clear(pcolor : TColor = clWhite) : TImageFX;
-    function DrawCentered(png : TPngImage; alpha : Double = 1) : TImageFX; overload;
-    function DrawCentered(stream: TStream; alpha : Double = 1) : TImageFX; overload;
-    function Draw(png : TPngImage; x, y : Integer; alpha : Double = 1) : TImageFX; overload;
-    function Draw(jpg : TJPEGImage; x: Integer; y: Integer; alpha: Double = 1) : TImageFX; overload;
-    function Draw(stream : TStream; x, y : Integer; alpha : Double = 1) : TImageFX; overload;
-    procedure SaveToPNG(outfile : string);
-    procedure SaveToJPG(outfile : string);
-    procedure SaveToBMP(outfile : string);
-    procedure SaveToGIF(outfile : string);
-  end;
-
-  IImageFXTransform = interface
-  ['{8B7B6447-8DFB-40F5-B729-0E2F34EB3F2F}']
-    function Resize(w, h : Integer) : TImageFX; overload;
-    function Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : TImageFX; overload;
-    function Rotate90 : TImageFX;
-    function Rotate180 : TImageFX;
-    function Rotate270 : TImageFX;
-    function RotateBy(RoundAngle : Integer) : TImageFX;
-    function RotateAngle(RotAngle : Single) : TImageFX;
-    function FlipX : TImageFX;
-    function FlipY : TImageFX;
-    function GrayScale : TImageFX;
-    function ScanlineH : TImageFX;
-    function ScanlineV : TImageFX;
-    function Lighten(StrenghtPercent : Integer = 30) : TImageFX;
-    function Darken(StrenghtPercent : Integer = 30) : TImageFX;
-    function Tint(mColor : TColor) : TImageFX;
-    function TintAdd(R, G , B : Integer) : TImageFX;
-    function TintBlue : TImageFX;
-    function TintRed : TImageFX;
-    function TintGreen : TImageFX;
-    function Solarize : TImageFX;
-    function Rounded(RoundLevel : Integer = 27) : TImageFX;
-  end;
+  function GCD(a,b : integer):integer;
+  function Lerp(a, b: Byte; t: Double): Byte;
+  function MinEx(a, b: Longint): Longint;
+  function MaxEx(a, b: Longint): Longint;
 
 implementation
+
+function GCD(a,b : integer):integer;
+begin
+  if (b mod a) = 0 then Result := a
+    else Result := GCD(b, a mod b);
+end;
+
+function Lerp(a, b: Byte; t: Double): Byte;
+var
+  tmp: Double;
+begin
+  tmp := t*a + (1-t)*b;
+  if tmp<0 then result := 0 else
+  if tmp>255 then result := 255 else
+  result := Round(tmp);
+end;
+
+function MinEx(a, b: Longint): Longint;
+begin
+  if a > b then Result := b
+  else
+    Result := a;
+end;
+
+function MaxEx(a, b: Longint): Longint;
+begin
+  if a > b then Result := a
+  else
+    Result := b;
+end;
 
 
 end.
