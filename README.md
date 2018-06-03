@@ -4,10 +4,14 @@
 
 Delphi library for simplifying image load/save, conversion and transformation. Can load/save png, jpg, gif and bmp. Can get image from different resources: file, stream, http, imagelist, associated windows icon, executable file icon, etc... Rotate, flip, grayscale and many other transformations.
 
+*NEW: Interface based
+*NEW: Vampyre lib engine added
+*NEW: New functions added
+*NEW: Refactory classes
 *NEW: Delphinus support
 
 ----------
-You need to add one of below units to your uses clause to select the engine you want to use:
+You cand select one or more of the available engines ImageFX supports. Add one or more of below units to your uses clause:
 
 - **Quick.ImageFX.GDI:** Uses GDI+ engine. No needs external libraries but it's slow.
 	
@@ -30,7 +34,26 @@ You need to add one of below units to your uses clause to select the engine you 
 	- QuickLibs from Exilon (https://github.com/exilon/QuickLibs)
 	- Delphi-OpenCV from Laex (https://github.com/Laex/Delphi-OpenCV).  
 	- CCR-Exif from Chris Rolliston (https://code.google.com/archive/p/ccr-exif)
+	
+- **Quick.ImageFX.Vampyre:** Vampyre Imaging Library Engine. Uses a thrid party delphi warper for Vampyre Imaging native library. Fast and supports many image formats.
+	
+    Needed libraries:  
+	
+	- QuickLibs from Exilon (https://github.com/exilon/QuickLibs)
+	- Vampyre-Imaging from Marek Mauder (https://github.com/galfar/imaginglib.git) 
+	- CCR-Exif from Chris Rolliston (https://code.google.com/archive/p/ccr-exif)
 
+
+**Create:** Create instance of ImageFX to load/manipulate images.
+```delphi
+var
+  ImageFX : IImageFX;
+begin
+  ImageFX := TImageFXGDI //You can create as TImageFXGDI, TImageFXGR32, TImageFXOpenCV or TImageFXVampyre to use different graphic engines
+  ImageFX.LoadFromFile('.\test.jpg');
+  ImageFX.Rotate90;
+  ImageFX.SaveAsPNG('.\Test.png');
+end;
 
 **Load/Save:** Can load/save png, jpg, gif and bmp and get image from different resources like file, stream, http, imagelist, associated windows icon, executable file icon, etc...
 
@@ -155,7 +178,8 @@ ImageFX.SaveAsPNG('.\myfile.png');
 //Rotate 90 degrees and flip horizontally, convert to grayscale and save to a png file.
 ImageFX.Rotate90.FlipX.GrayScale.SaveToPNG('.\myfile.png');
         
-// Load from file, rotate180, resize to 100x100 and assign to a TImage.    MyImage.Picture.Asssign(ImageFX.LoadFromFile('.\myfile.jpg').Rotate180.Resize(100,100).AsBitmap);
+// Load from file, rotate180, resize to 100x100 and assign to a TImage.    
+MyImage.Picture.Asssign(ImageFX.LoadFromFile('.\myfile.jpg').Rotate180.Resize(100,100).AsBitmap);
 ```
 
 
