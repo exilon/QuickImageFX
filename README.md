@@ -5,13 +5,17 @@
 Delphi library for simplifying image load/save, conversion and transformation. Can load/save png, jpg, gif and bmp. Can get image from different resources: file, stream, http, imagelist, associated windows icon, executable file icon, etc... Rotate, flip, grayscale and many other transformations.
 
 *NEW: Interface based
+
 *NEW: Vampyre lib engine added
+
 *NEW: New functions added
+
 *NEW: Refactory classes
+
 *NEW: Delphinus support
 
 ----------
-You cand select one or more of the available engines ImageFX supports. Add one or more of below units to your uses clause:
+You can select one or more of the available engines ImageFX supports. Add one or more of below units to your uses clause:
 
 - **Quick.ImageFX.GDI:** Uses GDI+ engine. No needs external libraries but it's slow.
 	
@@ -54,6 +58,7 @@ begin
   ImageFX.Rotate90;
   ImageFX.SaveAsPNG('.\Test.png');
 end;
+```
 
 **Load/Save:** Can load/save png, jpg, gif and bmp and get image from different resources like file, stream, http, imagelist, associated windows icon, executable file icon, etc...
 
