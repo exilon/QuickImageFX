@@ -3,9 +3,34 @@ unit Main;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Quick.ImageFX.Types, Quick.ImageFX.OpenCV, Quick.Chrono, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Mask, JvExMask, JvToolEdit,
-  Vcl.Samples.Spin, Vcl.Buttons, PngSpeedButton, System.ImageList, Vcl.ImgList, Vcl.Imaging.pngimage,Vcl.Imaging.jpeg;
+  Winapi.Windows,
+  Winapi.Messages,
+  System.SysUtils,
+  System.Variants,
+  System.Classes,
+  Vcl.Graphics,
+  Vcl.Controls,
+  Vcl.Forms,
+  Vcl.Dialogs,
+  Vcl.StdCtrls,
+  Vcl.ExtCtrls,
+  Vcl.Mask,
+  JvExMask,
+  JvToolEdit,
+  Vcl.Samples.Spin,
+  Vcl.Buttons,
+  PngSpeedButton,
+  System.ImageList,
+  Vcl.ImgList,
+  Vcl.Imaging.pngimage,
+  Vcl.Imaging.jpeg,
+  Quick.Chrono,
+  Quick.ImageFX,
+  Quick.ImageFX.Types,
+  Quick.ImageFX.GDI,
+  Quick.ImageFX.GR32,
+  Quick.ImageFX.OpenCV,
+  Quick.ImageFX.Vampyre;
 
   //Needs Quick.Chrono from QuickLibs https://github.com/exilon/QuickLibs
 
@@ -70,6 +95,7 @@ type
     btnGetExternalIcon: TButton;
     btnRandomGenerator: TButton;
     Button6: TButton;
+    cbImageLIb: TComboBox;
     procedure btnResizeClick(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -111,6 +137,7 @@ type
     procedure btnGetExternalIconClick(Sender: TObject);
     procedure btnRandomGeneratorClick(Sender: TObject);
     procedure Button6Click(Sender: TObject);
+    procedure cbImageLIbChange(Sender: TObject);
   private
     { Private declarations }
   public
@@ -120,7 +147,7 @@ type
 var
   MainForm: TMainForm;
   crono : TChronometer;
-  imagefx : TImageFX;
+  imagefx : IImageFX;
   PicStr : string;
 
 implementation
@@ -130,7 +157,7 @@ implementation
 procedure TMainForm.btnAlphaClick(Sender: TObject);
 begin
   crono.Start;
-  imagefx.SetAlpha(spedAlpha.Value);
+  //imagefx.SetAlpha(spedAlpha.Value);
   crono.Stop;
   Memo1.Lines.Add('Alpha: ' + crono.ElapsedTime);
   PaintImageTarget;
@@ -139,7 +166,7 @@ end;
 procedure TMainForm.btnAntiAliasingClick(Sender: TObject);
 begin
   crono.Start;
-  imagefx.AntiAliasing;
+  //imagefx.AntiAliasing;
   crono.Stop;
   Memo1.Lines.Add('AntiAliasing: ' + crono.ElapsedTime);
   PaintImageTarget;
@@ -305,7 +332,7 @@ end;
 procedure TMainForm.btnRotateAngleClick(Sender: TObject);
 begin
   crono.Start;
-  imagefx.RotateAngle(spedRotateAngle.Value);
+  imagefx.RotateBy(spedRotateAngle.Value);
   crono.Stop;
   Memo1.Lines.Add('Rotate Angle: ' + crono.ElapsedTime);
   PaintImageTarget;
@@ -452,7 +479,7 @@ begin
       Pixel.G := Random(255); //G
       Pixel.B := Random(255); //B
       Pixel.A := 255; //A
-      imageFX.Pixel[x,y] := Pixel;
+     //repair imageFX.Pixel[x,y] := Pixel;
       //imagefx.SetPixelImage(x,y,Pixel,imagefx.AsImage);
     end;
   end;
@@ -551,6 +578,17 @@ begin
   PaintImageTarget;
 end;
 
+procedure TMainForm.cbImageLIbChange(Sender: TObject);
+begin
+  case cbImageLIb.ItemIndex of
+   0 : imagefx := TImageFXGDI.Create;
+   1 : imagefx := TImageFXGR32.Create;
+   2 : imagefx := TImageFXOpenCV.Create;
+   3 : imagefx := TImageFXVampyre.Create;
+  end;
+  LoadImagen;
+end;
+
 procedure TMainForm.PaintImageTarget;
 var
   bmp : TBitmap;
@@ -572,15 +610,14 @@ end;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  if Assigned(imagefx) then imagefx.Free;
   crono.Free;
 end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   crono := TChronometer.Create(False);
-  crono.ReportFormatPrecission := True;
-  imagefx := TImageFX.Create;
+  crono.ReportFormatPrecission := TPrecissionFormat.pfFloat;
+  imagefx := TImageFXOpenCV.Create;
   LoadImagen;
 end;
 

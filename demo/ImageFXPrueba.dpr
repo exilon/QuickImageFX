@@ -4,7 +4,7 @@ uses
   Vcl.Forms,
   Main in 'Main.pas' {MainForm},
   Quick.ImageFX.Types in '..\Quick.ImageFX.Types.pas',
-  Quick.ImageFX.Base in '..\Quick.ImageFX.Base.pas';
+  Quick.ImageFX in '..\Quick.ImageFX.pas';
 
 {$R *.res}
 

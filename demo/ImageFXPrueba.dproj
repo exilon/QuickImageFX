@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{B696F7D6-776E-43AB-ACF3-C8E0D97DB954}</ProjectGuid>
-        <ProjectVersion>18.2</ProjectVersion>
+        <ProjectVersion>18.4</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <MainSource>ImageFXPrueba.dpr</MainSource>
         <Base>True</Base>
@@ -131,7 +131,7 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\Quick.ImageFX.Types.pas"/>
-        <DCCReference Include="..\Quick.ImageFX.Base.pas"/>
+        <DCCReference Include="..\Quick.ImageFX.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

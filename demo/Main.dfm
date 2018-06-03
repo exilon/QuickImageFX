@@ -144,7 +144,7 @@ object MainForm: TMainForm
       Top = 0
       Width = 498
       Height = 379
-      AutoSize = True
+      Proportional = True
     end
   end
   object ScrollBox2: TScrollBox
@@ -469,9 +469,9 @@ object MainForm: TMainForm
     Width = 138
     Height = 21
     Style = csDropDownList
-    ItemIndex = 0
+    ItemIndex = 1
     TabOrder = 41
-    Text = 'Stretch'
+    Text = 'Scale'
     Items.Strings = (
       'Stretch'
       'Scale'
@@ -532,6 +532,22 @@ object MainForm: TMainForm
     TabOrder = 47
     OnClick = Button6Click
   end
+  object cbImageLIb: TComboBox
+    Left = 1037
+    Top = 8
+    Width = 176
+    Height = 21
+    Style = csDropDownList
+    ItemIndex = 0
+    TabOrder = 48
+    Text = 'GDI+'
+    OnChange = cbImageLIbChange
+    Items.Strings = (
+      'GDI+'
+      'Graphics32'
+      'OpenCV'
+      'Vampyre')
+  end
   object ImageList1: TImageList
     ColorDepth = cd32Bit
     DrawingStyle = dsTransparent
@@ -540,7 +556,7 @@ object MainForm: TMainForm
     Left = 1031
     Top = 258
     Bitmap = {
-      494C0101020008007C0040004000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
+      494C0101020008008C0040004000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000000100004000000001002000000000000000
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
