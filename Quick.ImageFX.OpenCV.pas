@@ -1,13 +1,13 @@
-{ ***************************************************************************
+ï»¿{ ***************************************************************************
 
-  Copyright (c) 2016-2018 Kike Pérez
+  Copyright (c) 2016-2018 Kike Pï¿½rez
 
   Unit        : Quick.ImageFX.OpenCV
   Description : Image manipulation with OpenCV
-  Author      : Kike Pérez
-  Version     : 3.5
+  Author      : Kike Pï¿½rez
+  Version     : 4.0
   Created     : 10/04/2016
-  Modified    : 26/02/2018
+  Modified    : 27/05/2018
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -42,7 +42,6 @@ uses
   System.SysUtils,
   Winapi.ShellAPI,
   Vcl.Graphics,
-  System.Net.HttpClient,
   Vcl.Imaging.pngimage,
   Vcl.Imaging.jpeg,
   Vcl.Imaging.GIFImg,
@@ -57,7 +56,7 @@ uses
   ocv.imgproc_c,
   ocv.imgproc.types_c,
   CCR.Exif,
-  Quick.ImageFX.Base,
+  Quick.ImageFX,
   Quick.ImageFX.Types,
   Quick.Base64;
 
@@ -77,12 +76,11 @@ type
 
   TOCVParams = array[0..5] of TOCVParam;
 
-  TImageFX = class(TImageFXBase)
+  TImageFXOpenCV = class(TImageFX,IImageFX)
   private
     fOCVImage : pIplImage;
-    procedure InitBitmap(var bmp : TBitmap);
     procedure DoScanlines(ScanlineMode : TScanlineMode);
-    function ResizeImage(w, h : Integer; ResizeOptions : TResizeOptions) : TImageFX;
+    function ResizeImage(w, h : Integer; ResizeOptions : TResizeOptions) : IImageFX;
     function AsPAnsiChar(const str : string): PAnsiChar;
     procedure SaveToStreamWithoutCompression(stream : TStream; imgFormat : TImageFormat = ifJPG);
   protected
@@ -91,58 +89,56 @@ type
   public
     property Pixel[const x, y: Integer]: TPixelInfo read GetPixel write SetPixel;
     constructor Create; overload; override;
-    constructor Create(fromfile : string); overload;
+    constructor Create(fromfile : string); overload; override;
     destructor Destroy; override;
-    function NewBitmap(w, h: Integer; Depth : Integer = IPL_DEPTH_8U; nChannels : Integer = 4): TImageFx;
-    function LoadFromFile(fromfile : string; CheckIfFileExists : Boolean = False) : TImageFX;
-    function LoadFromFile2(fromfile : string; CheckIfFileExists : Boolean = False) : TImageFX;
-    function LoadFromStream(stream : TStream) : TImageFX;
-    function LoadFromString(str : string) : TImageFX;
-    function LoadFromImageList(imgList : TImageList; ImageIndex : Integer) : TImageFX;
-    function LoadFromIcon(Icon : TIcon) : TImageFX;
-    function LoadFromFileIcon(FileName : string; IconIndex : Word) : TImageFX;
-    function LoadFromFileExtension(aFilename : string; LargeIcon : Boolean) : TImageFX;
-    function LoadFromResource(ResourceName : string) : TImageFX;
-    function LoadFromHTTP(urlImage : string; out HTTPReturnCode : Integer; RaiseExceptions : Boolean = False) : TImageFX;
-    function LoadFromImage(image : pIplImage) : TImageFX;
+    function NewBitmap(w, h : Integer) : IImageFX; overload;
+    function NewBitmap(w, h: Integer; Depth : Integer; nChannels : Integer): IImageFX; overload;
+    function LoadFromFile(fromfile : string; CheckIfFileExists : Boolean = False) : IImageFX;
+    function LoadFromFile2(fromfile : string; CheckIfFileExists : Boolean = False) : IImageFX;
+    function LoadFromStream(stream : TStream) : IImageFX;
+    function LoadFromString(str : string) : IImageFX;
+    function LoadFromImageList(imgList : TImageList; ImageIndex : Integer) : IImageFX;
+    function LoadFromIcon(Icon : TIcon) : IImageFX;
+    function LoadFromFileIcon(FileName : string; IconIndex : Word) : IImageFX;
+    function LoadFromFileExtension(aFilename : string; LargeIcon : Boolean) : IImageFX;
+    function LoadFromResource(ResourceName : string) : IImageFX;
+    function LoadFromImage(image : pIplImage) : IImageFX;
     procedure GetResolution(var x,y : Integer); overload;
-    function GetResolution : string; overload;
     function AspectRatio : Double;
-    function AspectRatioStr : string;
-    class function GetAspectRatio(cWidth, cHeight : Integer) : string;
     function GetPixelImage(const x, y: Integer; image : pIplImage): TPixelInfo;
     procedure SetPixelImage(const x, y: Integer; const P: TPixelInfo; image : pIplImage);
+    function IsEmpty : Boolean;
     function IsGray : Boolean;
-    function Clear(pcolor : TColor = clWhite) : TImageFX;
-    function Resize(w, h : Integer) : TImageFX; overload;
-    function Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : TImageFX; overload;
-    function DrawCentered(png : TPngImage; alpha : Double = 1) : TImageFX; overload;
-    function DrawCentered(stream: TStream; alpha : Double = 1) : TImageFX; overload;
-    function Draw(png : TPngImage; x, y : Integer; alpha : Double = 1) : TImageFX; overload;
-    function Draw(jpg : TJPEGImage; x: Integer; y: Integer; alpha: Double = 1) : TImageFX; overload;
-    function Draw(stream : TStream; x, y : Integer; alpha : Double = 1) : TImageFX; overload;
-    function Draw(overlay : pIplImage; x, y : Integer; alpha : Double = 1) : TImageFX; overload;
-    function Rotate90 : TImageFX;
-    function Rotate180 : TImageFX;
-    function Rotate270 : TImageFX;
-    function RotateBy(RoundAngle : Integer) : TImageFX;
-    function RotateAngle(RotAngle : Single) : TImageFX;
-    function FlipX : TImageFX;
-    function FlipY : TImageFX;
-    function GrayScale : TImageFX;
-    function ScanlineH : TImageFX;
-    function ScanlineV : TImageFX;
-    function Lighten(StrenghtPercent : Integer = 30) : TImageFX;
-    function Darken(StrenghtPercent : Integer = 30) : TImageFX;
-    function Tint(mColor : TColor) : TImageFX;
-    function TintAdd(R, G , B : Integer) : TImageFX;
-    function TintBlue : TImageFX;
-    function TintRed : TImageFX;
-    function TintGreen : TImageFX;
-    function Solarize : TImageFX;
-    function Rounded(RoundLevel : Integer = 27) : TImageFX;
-    function AntiAliasing : TImageFX;
-    function SetAlpha(Alpha : Byte) : TImageFX;
+    procedure Assign(Graphic : TGraphic);
+    function Clear(pcolor : TColor = clNone) : IImageFX;
+    function Resize(w, h : Integer) : IImageFX; overload;
+    function Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : IImageFX; overload;
+    function Draw(Graphic : TGraphic; x, y : Integer; alpha : Double = 1) : IImageFX; overload;
+    function Draw(stream : TStream; x, y : Integer; alpha : Double = 1) : IImageFX; overload;
+    function Draw(overlay : pIplImage; x, y : Integer; alpha : Double = 1) : IImageFX; overload;
+    function DrawCentered(Graphic : TGraphic; alpha : Double = 1) : IImageFX; overload;
+    function DrawCentered(stream: TStream; alpha : Double = 1) : IImageFX; overload;
+    function Rotate90 : IImageFX;
+    function Rotate180 : IImageFX;
+    function Rotate270 : IImageFX;
+    function RotateBy(RoundAngle : Integer) : IImageFX;
+    function RotateAngle(RotAngle : Single) : IImageFX;
+    function FlipX : IImageFX;
+    function FlipY : IImageFX;
+    function GrayScale : IImageFX;
+    function ScanlineH : IImageFX;
+    function ScanlineV : IImageFX;
+    function Lighten(StrenghtPercent : Integer = 30) : IImageFX;
+    function Darken(StrenghtPercent : Integer = 30) : IImageFX;
+    function Tint(mColor : TColor) : IImageFX;
+    function TintAdd(R, G , B : Integer) : IImageFX;
+    function TintBlue : IImageFX;
+    function TintRed : IImageFX;
+    function TintGreen : IImageFX;
+    function Solarize : IImageFX;
+    function Rounded(RoundLevel : Integer = 27) : IImageFX;
+    function AntiAliasing : IImageFX;
+    function SetAlpha(Alpha : Byte) : IImageFX;
     procedure SaveToPNG(outfile : string);
     procedure SaveToJPG(outfile : string);
     procedure SaveToBMP(outfile : string);
@@ -154,7 +150,7 @@ type
     function AsGIF : TGifImage;
     function AsString(imgFormat : TImageFormat = ifJPG) : string;
     function CloneImage : pIplImage;
-    function Clone : TImageFX;
+    function Clone : IImageFX;
     procedure SaveToStream(stream : TStream; imgFormat : TImageFormat = ifJPG);
     class function ColorToScalar(PColor : TColor = clWhite) : TCvScalar;
   end;
@@ -163,26 +159,19 @@ type
 implementation
 
 
-constructor TImageFX.Create;
+constructor TImageFXOpenCV.Create;
 begin
   inherited Create;
   fOCVImage := nil;
 end;
 
-constructor TImageFX.Create(fromfile: string);
+constructor TImageFXOpenCV.Create(fromfile: string);
 begin
   Create;
   LoadFromFile(fromfile);
 end;
 
-procedure TImageFX.InitBitmap(var bmp : TBitmap);
-begin
-  bmp.PixelFormat := pf32bit;
-  bmp.HandleType := bmDIB;
-  bmp.AlphaFormat := afDefined;
-end;
-
-destructor TImageFX.Destroy;
+destructor TImageFXOpenCV.Destroy;
 begin
   if Assigned(fOCVImage) then cvReleaseImage(fOCVImage);
   inherited;
@@ -247,7 +236,7 @@ begin
   end;
 end;}
 
-function TImageFX.LoadFromFile(fromfile: string; CheckIfFileExists : Boolean = False) : TImageFX;
+function TImageFXOpenCV.LoadFromFile(fromfile: string; CheckIfFileExists : Boolean = False) : IImageFX;
 var
   fs : TFileStream;
 begin
@@ -277,7 +266,7 @@ begin
   else LastResult := arOk;
 end;
 
-function TImageFX.LoadFromFile2(fromfile: string; CheckIfFileExists : Boolean = False) : TImageFX;
+function TImageFXOpenCV.LoadFromFile2(fromfile: string; CheckIfFileExists : Boolean = False) : IImageFX;
 begin
   Result := Self;
 
@@ -300,7 +289,7 @@ begin
   else LastResult := arOk;
 end;
 
-function TImageFX.LoadFromStream(stream: TStream) : TImageFX;
+function TImageFXOpenCV.LoadFromStream(stream: TStream) : IImageFX;
 var
   Buffer : TBytes;
   Size : Int64;
@@ -310,10 +299,10 @@ begin
   Result := Self;
   ExifData := nil;
 
-  if (not Assigned(stream)) or (stream.Size < 1024) then
+  if (not Assigned(stream)) or (stream.Size = 0) then
   begin
     LastResult := arZeroBytes;
-    Exit;
+    raise Exception.Create('Stream is empty!');
   end;
 
   if fOCVImage <> nil then cvReleaseImage(fOCVImage);
@@ -332,39 +321,12 @@ begin
     cvReleaseMat(mat);
   end;
 
-  if ExifRotation then
-  begin
-    //read Exif info and rotates image if needed
-    stream.Seek(soFromBeginning,0);
-    ExifData := TExifData.Create;
-    try
-      if ExifData.IsSupportedGraphic(stream) then
-      begin
-        stream.Seek(soFromBeginning,0);
-        ExifData.LoadFromGraphic(stream);
-        ExifData.EnsureEnumsInRange := False;
-        if not ExifData.Empty then
-        begin
-          case ExifData.Orientation of
-            //TExifOrientation.toTopLeft : //Normal
-            TExifOrientation.toTopRight : Self.FlipX; //Mirror horizontal
-            TExifOrientation.toBottomRight : Self.Rotate180; //Rotate 180°
-            TExifOrientation.toBottomLeft : Self.FlipY; //Mirror vertical
-            TExifOrientation.toLeftTop : Self.FlipX.Rotate270; //Mirrow horizontal and rotate 270°
-            TExifOrientation.toRightTop : Self.Rotate90; //Rotate 90°
-            TExifOrientation.toRightBottom : Self.FlipX.Rotate90; //Mirror horizontal and rotate 90°
-            TExifOrientation.toLeftBottom : Self.Rotate270; //Rotate 270°
-          end;
-        end;
-      end;
-    finally
-      ExifData.Free;
-    end;
-  end;
+  if ExifRotation then ProcessExifRotation(stream);
+
   LastResult := arOk;
 end;
 
-function TImageFX.LoadFromString(str: string) : TImageFX;
+function TImageFXOpenCV.LoadFromString(str: string) : IImageFX;
 var
   stream : TStringStream;
 begin
@@ -386,7 +348,7 @@ begin
   end;
 end;
 
-function TImageFX.LoadFromFileIcon(FileName : string; IconIndex : Word) : TImageFX;
+function TImageFXOpenCV.LoadFromFileIcon(FileName : string; IconIndex : Word) : IImageFX;
 var
    Icon : TIcon;
 begin
@@ -401,7 +363,7 @@ begin
   end;
 end;
 
-function TImageFX.LoadFromResource(ResourceName : string) : TImageFX;
+function TImageFXOpenCV.LoadFromResource(ResourceName : string) : IImageFX;
 var
    icon : TIcon;
    //GPBitmap : TGPBitmap;
@@ -418,7 +380,7 @@ begin
   end;
 end;
 
-function TImageFX.LoadFromImageList(imgList : TImageList; ImageIndex : Integer) : TImageFX;
+function TImageFXOpenCV.LoadFromImageList(imgList : TImageList; ImageIndex : Integer) : IImageFX;
 var
   icon : TIcon;
 begin
@@ -435,7 +397,7 @@ begin
   end;
 end;
 
-function TImageFX.LoadFromIcon(Icon : TIcon) : TImageFX;
+function TImageFXOpenCV.LoadFromIcon(Icon : TIcon) : IImageFX;
 var
   ms : TMemoryStream;
   bmp : TBitmap;
@@ -458,7 +420,7 @@ begin
 end;
 
 
-function TImageFX.LoadFromFileExtension(aFilename : string; LargeIcon : Boolean) : TImageFX;
+function TImageFXOpenCV.LoadFromFileExtension(aFilename : string; LargeIcon : Boolean) : IImageFX;
 var
   icon : TIcon;
   aInfo : TSHFileInfo;
@@ -482,76 +444,19 @@ begin
   end;
 end;
 
-function TImageFX.LoadFromHTTP(urlImage : string; out HTTPReturnCode : Integer; RaiseExceptions : Boolean = False) : TImageFX;
-var
-  http : THTTPClient;
-  ms : TMemoryStream;
-begin
-  Result := Self;
-  HTTPReturnCode := 500;
-  LastResult := arUnknowFmtType;
-  try
-    ms := GetHTTPStream(urlImage,HTTPReturnCode);
-    try
-      Self.LoadFromStream(ms);
-      if fOCVImage = nil then
-      begin
-        HTTPReturnCode := 500;
-        if RaiseExceptions then raise Exception.Create('Unknown Format');
-      end
-      else LastResult := arOk;
-    finally
-      ms.Free;
-    end;
-  except
-    on E : Exception do if RaiseExceptions then raise Exception.Create(e.message);
-  end;
-end;
-
-function TImageFX.LoadFromImage(image : pIplImage) : TImageFX;
+function TImageFXOpenCV.LoadFromImage(image : pIplImage) : IImageFX;
 begin
   Result := Self;
   fOCVImage := image;
 end;
 
-function TImageFX.AspectRatio : Double;
+function TImageFXOpenCV.AspectRatio : Double;
 begin
   if fOCVImage <> nil then Result := fOCVImage.width / fOCVImage.Height
     else Result := 0;
 end;
 
-
-function TImageFX.AspectRatioStr : string;
-begin
-  if fOCVImage <> nil then
-  begin
-    Result := GetAspectRatio(fOCVImage.Width,fOCVImage.Height);
-  end
-  else Result := 'N/A';
-end;
-
-class function TImageFX.GetAspectRatio(cWidth, cHeight : Integer) : string;
-var
-  ar : Integer;
-begin
-  if cHeight = 0 then Exit;
-
-  ar := GCD(cWidth,cHeight);
-  Result := Format('%d:%d',[cWidth div ar, cHeight div ar]);
-end;
-
-
-function Lerp(a, b: Byte; t: Double): Byte;
-var
-  tmp: Double;
-begin
-  tmp := t*a + (1-t)*b;
-  if tmp<0 then result := 0 else
-  if tmp>255 then result := 255 else
-  result := Round(tmp);
-end;
-
-procedure TImageFX.GetResolution(var x,y : Integer);
+procedure TImageFXOpenCV.GetResolution(var x,y : Integer);
 begin
   if Assigned(fOCVImage) then
   begin
@@ -567,34 +472,25 @@ begin
   end;
 end;
 
-function TImageFX.GetResolution : string;
+function TImageFXOpenCV.IsEmpty: Boolean;
 begin
-  if Assigned(fOCVImage) then
-  begin
-    Result := Format('%d x %d',[fOCVImage^.Width,fOCVImage^.Height]);
-    LastResult := arOk;
-  end
-  else
-  begin
-    Result := 'N/A';
-    LastResult := arCorruptedData;
-  end;
+  Result := fOCVImage = nil;
 end;
 
-function TImageFX.IsGray: Boolean;
+function TImageFXOpenCV.IsGray: Boolean;
 begin
   if Assigned(fOCVImage) then Result := fOCVImage^.nChannels = 1
     else Result := False;
 end;
 
-function TImageFX.Clear(pcolor : TColor = clWhite) : TImageFX;
+function TImageFXOpenCV.Clear(pcolor : TColor = clNone) : IImageFX;
 begin
   Result := Self;
   cvRectangle(fOCVImage,cvPoint(0,0),cvPoint(fOCVImage^.width,fOCVImage^.height),ColorToScalar(pcolor),CV_FILLED);
   LastResult := arOk;
 end;
 
-function TImageFX.ResizeImage(w, h : Integer; ResizeOptions : TResizeOptions) : TImageFX;
+function TImageFXOpenCV.ResizeImage(w, h : Integer; ResizeOptions : TResizeOptions) : IImageFX;
 var
   ImgAux : pIplImage;
   srcRect,
@@ -728,7 +624,7 @@ begin
         //all cases no resizes, but CropToFill needs to grow to fill target size
         if ResizeOptions.ResizeMode <> rmCropToFill then
         begin
-          if ResizeOptions.SkipSmaller then
+          if not ResizeOptions.SkipSmaller then
           begin
             LastResult := arAlreadyOptim;
             nw := srcRect.Width;
@@ -791,12 +687,12 @@ begin
   end;
 end;
 
-function TImageFX.Resize(w, h : Integer) : TImageFX;
+function TImageFXOpenCV.Resize(w, h : Integer) : IImageFX;
 begin
   Result := ResizeImage(w,h,ResizeOptions);
 end;
 
-function TImageFX.Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : TImageFX;
+function TImageFXOpenCV.Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : IImageFX;
 var
   lResizeOptions : TResizeOptions;
 begin
@@ -811,47 +707,42 @@ begin
   end;
 end;
 
-
-function TImageFX.DrawCentered(png : TPngImage; alpha : Double = 1) : TImageFX;
+procedure TImageFXOpenCV.Assign(Graphic : TGraphic);
+var
+  ms : TMemoryStream;
 begin
-  Result := Draw(png,(fOCVImage.Width - png.Width) div 2, (fOCVImage.Height - png.Height) div 2,alpha);
+  ms := TMemoryStream.Create;
+  try
+    LoadFromStream(ms);
+  finally
+    ms.Free;
+  end;
 end;
 
-function TImageFX.DrawCentered(stream: TStream; alpha : Double = 1) : TImageFX;
+function TImageFXOpenCV.DrawCentered(Graphic : TGraphic; alpha : Double = 1) : IImageFX;
+begin
+  Result := Draw(Graphic,(fOCVImage.Width - Graphic.Width) div 2, (fOCVImage.Height - Graphic.Height) div 2,alpha);
+end;
+
+function TImageFXOpenCV.DrawCentered(stream: TStream; alpha : Double = 1) : IImageFX;
 begin
   Result := Draw(stream,-1,-1,alpha);
 end;
 
-
-function TImageFX.Draw(png : TPngImage; x: Integer; y: Integer; alpha: Double = 1) : TImageFX;
+function TImageFXOpenCV.Draw(Graphic : TGraphic; x: Integer; y: Integer; alpha: Double = 1) : IImageFX;
 var
   stream : TStream;
 begin
   stream := TStringStream.Create;
   try
-    png.SaveToStream(stream);
+    Graphic.SaveToStream(stream);
     Result := Draw(stream,x,y,alpha);
   finally
     stream.Free;
   end;
 end;
 
-
-function TImageFX.Draw(jpg : TJPEGImage; x: Integer; y: Integer; alpha: Double = 1) : TImageFX;
-var
-  stream : TStream;
-begin
-  stream := TStringStream.Create;
-  try
-    jpg.SaveToStream(stream);
-    Result := Draw(stream,x,y,alpha);
-  finally
-    stream.Free;
-  end;
-end;
-
-
-function TImageFX.Draw(stream: TStream; x: Integer; y: Integer; alpha: Double = 1) : TImageFX;
+function TImageFXOpenCV.Draw(stream: TStream; x: Integer; y: Integer; alpha: Double = 1) : IImageFX;
 var
   overlay : pIplImage;
   mat : pCvMat;
@@ -879,7 +770,7 @@ begin
 end;
 
 
-function TImageFX.Draw(overlay : pIplImage; x, y : Integer; alpha : Double = 1) : TImageFX;
+function TImageFXOpenCV.Draw(overlay : pIplImage; x, y : Integer; alpha : Double = 1) : IImageFX;
 var
   i, j, k: Integer;
   opacity: Double;
@@ -941,14 +832,19 @@ begin
   end;
 end;
 
-function TImageFX.NewBitmap(w, h: Integer; Depth : Integer = IPL_DEPTH_8U; nChannels : Integer = 4): TImageFx;
+function TImageFXOpenCV.NewBitmap(w, h : Integer) : IImageFX;
+begin
+  NewBitmap(w,h,IPL_DEPTH_8U,4);
+end;
+
+function TImageFXOpenCV.NewBitmap(w, h: Integer; Depth : Integer; nChannels : Integer): IImageFX;
 begin
   Result := Self;
   if fOCVImage <> nil then cvReleaseImage(fOCVImage);
   fOCVImage := cvCreateImage(CvSize(w,h),Depth,nChannels);
 end;
 
-function TImageFX.Rotate90 : TImageFX;
+function TImageFXOpenCV.Rotate90 : IImageFX;
 begin
   Result := Self;
   LastResult := arRotateError;
@@ -956,7 +852,7 @@ begin
   LastResult := arOk;
 end;
 
-function TImageFX.Rotate180 : TImageFX;
+function TImageFXOpenCV.Rotate180 : IImageFX;
 begin
   Result := Self;
   LastResult := arRotateError;
@@ -964,7 +860,7 @@ begin
   LastResult := arOk;
 end;
 
-function TImageFX.Rotate270 : TImageFX;
+function TImageFXOpenCV.Rotate270 : IImageFX;
 begin
   Result := Self;
   LastResult := arRotateError;
@@ -972,7 +868,7 @@ begin
   LastResult := arOk;
 end;
 
-function TImageFX.RotateBy(RoundAngle : Integer) : TImageFX;
+function TImageFXOpenCV.RotateBy(RoundAngle : Integer) : IImageFX;
 var
   center : TCvPoint2D32f;
   mat : pCvMat;
@@ -1022,7 +918,7 @@ begin
 end;
 
 
-function TImageFX.RotateAngle(RotAngle: Single) : TImageFX;
+function TImageFXOpenCV.RotateAngle(RotAngle: Single) : IImageFX;
 var
   center : TCvPoint2D32f;
   ImgAux : pIplImage;
@@ -1070,7 +966,7 @@ begin
 end;
 
 
-function TImageFX.FlipX : TImageFX;
+function TImageFXOpenCV.FlipX : IImageFX;
 begin
   Result := Self;
   LastResult := arRotateError;
@@ -1078,7 +974,7 @@ begin
   LastResult := arOk;
 end;
 
-function TImageFX.FlipY : TImageFX;
+function TImageFXOpenCV.FlipY : IImageFX;
 begin
   Result := Self;
   LastResult := arRotateError;
@@ -1086,7 +982,7 @@ begin
   LastResult := arOk;
 end;
 
-function TImageFX.GrayScale : TImageFX;
+function TImageFXOpenCV.GrayScale : IImageFX;
 var
   ImgAux : pIplImage;
 begin
@@ -1101,7 +997,7 @@ begin
   LastResult := arOk;
 end;
 
-function TImageFX.Lighten(StrenghtPercent : Integer = 30) : TImageFX;
+function TImageFXOpenCV.Lighten(StrenghtPercent : Integer = 30) : IImageFX;
 begin
   Result := Self;
   LastResult := arColorizeError;
@@ -1110,7 +1006,7 @@ begin
   LastResult := arOk;
 end;
 
-function TImageFX.Darken(StrenghtPercent : Integer = 30) : TImageFX;
+function TImageFXOpenCV.Darken(StrenghtPercent : Integer = 30) : IImageFX;
 begin
   Result := Self;
   LastResult := arColorizeError;
@@ -1119,7 +1015,7 @@ begin
   LastResult := arOk;
 end;
 
-function TImageFX.Tint(mColor : TColor) : TImageFX;
+function TImageFXOpenCV.Tint(mColor : TColor) : IImageFX;
 var
   RGB : TRGB;
 begin
@@ -1134,7 +1030,7 @@ begin
   LastResult := arOk;
 end;
 
-function TImageFX.TintAdd(R, G , B : Integer) : TImageFX;
+function TImageFXOpenCV.TintAdd(R, G , B : Integer) : IImageFX;
 const
   alpha = 1;
 var
@@ -1162,39 +1058,39 @@ begin
   LastResult := arOk;
 end;
 
-function TImageFX.TintBlue : TImageFX;
+function TImageFXOpenCV.TintBlue : IImageFX;
 begin
   Result := Tint(clBlue);
 end;
 
-function TImageFX.TintRed : TImageFX;
+function TImageFXOpenCV.TintRed : IImageFX;
 begin
   Result := Tint(clRed);
 end;
 
-function TImageFX.TintGreen : TImageFX;
+function TImageFXOpenCV.TintGreen : IImageFX;
 begin
   Result := Tint(clGreen);
 end;
 
-function TImageFX.Solarize : TImageFX;
+function TImageFXOpenCV.Solarize : IImageFX;
 begin
   Result := TintAdd(255,-1,-1);
 end;
 
-function TImageFX.ScanlineH;
+function TImageFXOpenCV.ScanlineH;
 begin
   Result := Self;
   DoScanLines(smHorizontal);
 end;
 
-function TImageFX.ScanlineV;
+function TImageFXOpenCV.ScanlineV;
 begin
   Result := Self;
   DoScanLines(smVertical);
 end;
 
-procedure TImageFX.DoScanLines(ScanLineMode : TScanlineMode);
+procedure TImageFXOpenCV.DoScanLines(ScanLineMode : TScanlineMode);
 var
   dolines : Boolean;
   row,col : Integer;
@@ -1237,35 +1133,35 @@ begin
   end;
 end;
 
-procedure TImageFX.SaveToPNG(outfile : string);
+procedure TImageFXOpenCV.SaveToPNG(outfile : string);
 begin
   LastResult := arConversionError;
   cvvSaveImage(AsPAnsiChar(outfile),fOCVImage);
   LastResult := arOk;
 end;
 
-procedure TImageFX.SaveToJPG(outfile : string);
+procedure TImageFXOpenCV.SaveToJPG(outfile : string);
 begin
   LastResult := arConversionError;
   cvSaveImage(AsPAnsiChar(outfile),fOCVImage);
   LastResult := arOk;
 end;
 
-procedure TImageFX.SaveToBMP(outfile : string);
+procedure TImageFXOpenCV.SaveToBMP(outfile : string);
 begin
   LastResult := arConversionError;
   cvSaveImage(AsPAnsiChar(outfile),fOCVImage);
   LastResult := arOk;
 end;
 
-procedure TImageFX.SaveToGIF(outfile : string);
+procedure TImageFXOpenCV.SaveToGIF(outfile : string);
 begin
   LastResult := arConversionError;
   cvSaveImage(AsPAnsiChar(outfile),fOCVImage);
   LastResult := arOk;
 end;
 
-function TImageFX.AsBitmap : TBitmap;
+function TImageFXOpenCV.AsBitmap : TBitmap;
 var
   ms : TMemoryStream;
 begin
@@ -1282,7 +1178,7 @@ begin
   LastResult := arOk;
 end;
 
-function TImageFX.AsPNG: TPngImage;
+function TImageFXOpenCV.AsPNG: TPngImage;
 var
   ms : TMemoryStream;
 begin
@@ -1301,7 +1197,7 @@ begin
   LastResult := arOk;
 end;
 
-function TImageFX.AsJPG : TJPEGImage;
+function TImageFXOpenCV.AsJPG : TJPEGImage;
 var
   ms : TMemoryStream;
 begin
@@ -1320,7 +1216,7 @@ begin
   LastResult := arOk;
 end;
 
-function TImageFX.AsGIF : TGifImage;
+function TImageFXOpenCV.AsGIF : TGifImage;
 var
   ms : TMemoryStream;
 begin
@@ -1336,17 +1232,17 @@ begin
   LastResult := arOk;
 end;
 
-function TImageFX.AsImage: pIplImage;
+function TImageFXOpenCV.AsImage: pIplImage;
 begin
   Result := fOCVImage;
 end;
 
-function TImageFX.GetPixel(const x, y: Integer): TPixelInfo;
+function TImageFXOpenCV.GetPixel(const x, y: Integer): TPixelInfo;
 begin
   Result := GetPixelImage(x,y,fOCVImage);
 end;
 
-function TImageFX.GetPixelImage(const x, y: Integer; image : pIplImage): TPixelInfo;
+function TImageFXOpenCV.GetPixelImage(const x, y: Integer; image : pIplImage): TPixelInfo;
 var
   ColorEncode : TocvColorEncode;
 begin
@@ -1384,12 +1280,12 @@ begin
   end;
 end;
 
-procedure TImageFX.SetPixel(const x, y: Integer; const P: TPixelInfo);
+procedure TImageFXOpenCV.SetPixel(const x, y: Integer; const P: TPixelInfo);
 begin
   SetPixelImage(x,y,P,fOCVImage);
 end;
 
-procedure TImageFX.SetPixelImage(const x, y: Integer; const P: TPixelInfo; image : pIplImage);
+procedure TImageFXOpenCV.SetPixelImage(const x, y: Integer; const P: TPixelInfo; image : pIplImage);
 var
   ColorEncode : TocvColorEncode;
 begin
@@ -1424,7 +1320,7 @@ begin
   end;
 end;
 
-function TImageFX.AsString(imgFormat : TImageFormat = ifJPG) : string;
+function TImageFXOpenCV.AsString(imgFormat : TImageFormat = ifJPG) : string;
 var
   ss : TStringStream;
   mat : pCvMat;
@@ -1445,38 +1341,26 @@ begin
   end;
 end;
 
-function TImageFX.CloneImage : pIplImage;
+function TImageFXOpenCV.CloneImage : pIplImage;
 begin
   Result := cvCloneImage(fOCVImage);
 end;
 
-function TImageFX.Clone : TImageFX;
+function TImageFXOpenCV.Clone : IImageFX;
 begin
-  Result := TImageFX.Create;
-  Result.LoadFromImage(Self.CloneImage);
-  Result.JPGQualityPercent := Self.JPGQualityPercent;
-  Result.PNGCompressionLevel := Self.PNGCompressionLevel;
-  Result.ProgressiveJPG := Self.ProgressiveJPG;
-  Result.ResizeOptions.NoMagnify := Self.ResizeOptions.NoMagnify;
-  Result.ResizeOptions.ResizeMode := Self.ResizeOptions.ResizeMode;
-  Result.ResizeOptions.ResamplerMode := Self.ResizeOptions.ResamplerMode;
-  Result.ResizeOptions.Center := Self.ResizeOptions.Center;
-  Result.ResizeOptions.FillBorders := Self.ResizeOptions.FillBorders;
-  Result.ResizeOptions.BorderColor := Self.ResizeOptions.BorderColor;
-  Result.HTTPOptions.UserAgent := Self.HTTPOptions.UserAgent;
-  Result.HTTPOptions.HandleRedirects := Self.HTTPOptions.HandleRedirects;
-  Result.HTTPOptions.MaxRedirects := Self.HTTPOptions.MaxRedirects;
-  Result.HTTPOptions.AllowCookies := Self.HTTPOptions.AllowCookies;
-  Result.HTTPOptions.ConnectionTimeout := Self.HTTPOptions.ConnectionTimeout;
-  Result.HTTPOptions.ResponseTimeout := Self.HTTPOptions.ResponseTimeout;
+  Result := TImageFXOpenCV.Create;
+  (Result as TImageFXOpenCV).LoadFromImage(Self.CloneImage);
+  CloneValues(Result);
 end;
 
 
-procedure TImageFX.SaveToStream(stream : TStream; imgFormat : TImageFormat = ifJPG);
+procedure TImageFXOpenCV.SaveToStream(stream : TStream; imgFormat : TImageFormat = ifJPG);
 var
   mat : pCvMat;
   params : TOCVParam;
 begin
+  if stream.Position > 0 then stream.Seek(0,soBeginning);
+
   if imgFormat = ifJPG then params := [CV_IMWRITE_JPEG_QUALITY, JPGQualityPercent, 0]
     else if imgFormat = ifPNG then params := [CV_IMWRITE_PNG_COMPRESSION, PNGCompressionLevel, 0];
   mat := cvEncodeImage(AsPAnsiChar(GetImageFmtExt(imgFormat)),fOCVImage,@params[0]);
@@ -1488,10 +1372,12 @@ begin
   end;
 end;
 
-procedure TImageFX.SaveToStreamWithoutCompression(stream : TStream; imgFormat : TImageFormat = ifJPG);
+procedure TImageFXOpenCV.SaveToStreamWithoutCompression(stream : TStream; imgFormat : TImageFormat = ifJPG);
 var
   mat : pCvMat;
 begin
+  if stream.Position > 0 then stream.Seek(0,soBeginning);
+
   mat := cvEncodeImage(AsPAnsiChar(GetImageFmtExt(imgFormat)),fOCVImage,nil);
   try
     stream.WriteData(mat.data.ptr,mat.step * mat.rows);
@@ -1502,7 +1388,7 @@ begin
 end;
 
 
-class function TImageFX.ColorToScalar(PColor : TColor = clWhite) : TCvScalar;
+class function TImageFXOpenCV.ColorToScalar(PColor : TColor = clWhite) : TCvScalar;
 var
   BColor : TRGB;
 begin
@@ -1568,18 +1454,18 @@ begin
   end;
 end;
 
-function TImageFX.AsPAnsiChar(const str : string) : PAnsiChar;
+function TImageFXOpenCV.AsPAnsiChar(const str : string) : PAnsiChar;
 begin
   Result := c_str(str);
 end;
 
-function TImageFX.Rounded(RoundLevel : Integer = 27) : TImageFX;
+function TImageFXOpenCV.Rounded(RoundLevel : Integer = 27) : IImageFX;
 begin
   //not implemented
   Result := Self;
 end;
 
-function TImageFX.AntiAliasing : TImageFX;
+function TImageFXOpenCV.AntiAliasing : IImageFX;
 var
   bmp : TBitmap;
 begin
@@ -1587,7 +1473,7 @@ begin
   //not implemented
 end;
 
-function TImageFX.SetAlpha(Alpha : Byte) : TImageFX;
+function TImageFXOpenCV.SetAlpha(Alpha : Byte) : IImageFX;
 begin
   Result := Self;
   //not implemented
