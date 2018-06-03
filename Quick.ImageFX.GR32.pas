@@ -1,13 +1,13 @@
-{ ***************************************************************************
+ï»¿{ ***************************************************************************
 
-  Copyright (c) 2013-2018 Kike Pérez
+  Copyright (c) 2013-2018 Kike Pï¿½rez
 
   Unit        : Quick.ImageFX.GR32
   Description : Image manipulation with GR32
-  Author      : Kike Pérez
-  Version     : 3.0
+  Author      : Kike Pï¿½rez
+  Version     : 4.0
   Created     : 10/04/2013
-  Modified    : 26/02/2018
+  Modified    : 27/05/2018
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -50,7 +50,6 @@ uses
    GR32_Filters,
    GR32_Transforms,
    GR32_Math,
-   System.Net.HttpClient,
    GDIPAPI,
    GDIPOBJ,
    GDIPUTIL,
@@ -58,7 +57,7 @@ uses
    Vcl.Imaging.jpeg,
    Vcl.Imaging.GIFImg,
    Quick.Base64,
-   Quick.ImageFX.Base,
+   Quick.ImageFX,
    Quick.ImageFX.Types;
 
 
@@ -66,8 +65,6 @@ const
   MaxPixelCountA = MaxInt Div SizeOf (TRGBQuad);
 
 type
-
-  TImageFormat = (ifBMP, ifJPG, ifPNG, ifGIF);
 
   TScanlineMode = (smHorizontal, smVertical);
 
@@ -83,13 +80,11 @@ type
   TRGBArray = ARRAY[0..32767] OF TRGBTriple;
   pRGBArray = ^TRGBArray;
 
-  TImageFX = class(TImageFXBase)
+  TImageFXGR32 = class(TImageFX,IImageFX)
   private
     fBitmap : TBitmap32;
-    procedure InitBitmap(var bmp : TBitmap);
-    procedure CleanTransparentPng(var png: TPngImage; NewWidth, NewHeight: Integer);
     procedure DoScanlines(ScanlineMode : TScanlineMode);
-    function ResizeImage(w, h : Integer; ResizeOptions : TResizeOptions) : TImageFX;
+    function ResizeImage(w, h : Integer; ResizeOptions : TResizeOptions) : IImageFX;
     procedure GPBitmapToBitmap(gpbmp : TGPBitmap; bmp : TBitmap32);
     function GetFileInfo(AExt : string; var AInfo : TSHFileInfo; ALargeIcon : Boolean = false) : boolean;
     procedure SetPixelImage(const x, y: Integer; const P: TPixelInfo; bmp32 : TBitmap32);
@@ -100,94 +95,82 @@ type
   public
     property AsBitmap32 : TBitmap32 read fBitmap write fBitmap;
     constructor Create; overload; override;
-    constructor Create(fromfile : string); overload;
     destructor Destroy; override;
-    function NewBitmap(w, h : Integer) : TImageFx;
+    function NewBitmap(w, h : Integer) : IImageFX;
     property Pixel[const x, y: Integer]: TPixelInfo read GetPixel write SetPixel;
-    function LoadFromFile(fromfile : string; CheckIfFileExists : Boolean = False) : TImageFX;
-    function LoadFromStream(stream : TStream) : TImageFX;
-    function LoadFromString(str : string) : TImageFX;
-    function LoadFromImageList(imgList : TImageList; ImageIndex : Integer) : TImageFX;
-    function LoadFromIcon(Icon : TIcon) : TImageFX;
-    function LoadFromFileIcon(FileName : string; IconIndex : Word) : TImageFX;
-    function LoadFromFileExtension(aFilename : string; LargeIcon : Boolean) : TImageFX;
-    function LoadFromResource(ResourceName : string) : TImageFX;
-    function LoadFromHTTP(urlImage : string; out HTTPReturnCode : Integer; RaiseExceptions : Boolean = False) : TImageFX;
+    function IsEmpty : Boolean;
+    function LoadFromFile(fromfile : string; CheckIfFileExists : Boolean = False) : IImageFX;
+    function LoadFromStream(stream : TStream) : IImageFX;
+    function LoadFromString(str : string) : IImageFX;
+    function LoadFromImageList(imgList : TImageList; ImageIndex : Integer) : IImageFX;
+    function LoadFromIcon(Icon : TIcon) : IImageFX;
+    function LoadFromFileIcon(FileName : string; IconIndex : Word) : IImageFX;
+    function LoadFromFileExtension(aFilename : string; LargeIcon : Boolean) : IImageFX;
+    function LoadFromResource(ResourceName : string) : IImageFX;
+    function Clone : IImageFX;
+    function IsGray : Boolean;
+    procedure Assign(Graphic : TGraphic);
     procedure GetResolution(var x,y : Integer); overload;
     function GetResolution : string; overload;
     function AspectRatio : Double;
-    function AspectRatioStr : string;
-    class function GetAspectRatio(cWidth, cHeight : Integer) : string;
-    function Clear : TImageFX;
-    function Resize(w, h : Integer) : TImageFX; overload;
-    function Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : TImageFX; overload;
-    function Draw(png : TPngImage; alpha : Double = 1) : TImageFX; overload;
-    function Draw(png : TPngImage; x, y : Integer; alpha : Double = 1) : TImageFX; overload;
-    function Draw(stream: TStream; x: Integer; y: Integer; alpha: Double = 1) : TImageFX; overload;
-    function DrawCentered(png : TPngImage; alpha : Double = 1) : TImageFX; overload;
-    function DrawCentered(stream: TStream; alpha : Double = 1) : TImageFX; overload;
-    function Rotate90 : TImageFX;
-    function Rotate180 : TImageFX;
-    function Rotate270 : TImageFX;
-    function RotateAngle(RotAngle : Single) : TImageFX;
-    function FlipX : TImageFX;
-    function FlipY : TImageFX;
-    function GrayScale : TImageFX;
-    function ScanlineH : TImageFX;
-    function ScanlineV : TImageFX;
-    function Lighten(StrenghtPercent : Integer = 30) : TImageFX;
-    function Darken(StrenghtPercent : Integer = 30) : TImageFX;
-    function Tint(mColor : TColor) : TImageFX;
-    function TintAdd(R, G , B : Integer) : TImageFX;
-    function TintBlue : TImageFX;
-    function TintRed : TImageFX;
-    function TintGreen : TImageFX;
-    function Solarize : TImageFX;
-    function Rounded(RoundLevel : Integer = 27) : TImageFX;
-    function AntiAliasing : TImageFX;
-    function SetAlpha(Alpha : Byte) : TImageFX;
+    function Clear(pcolor : TColor = clNone) : IImageFX;
+    function Resize(w, h : Integer) : IImageFX; overload;
+    function Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : IImageFX; overload;
+    procedure GraphicToBitmap32(Graphic : TGraphic; var bmp32 : TBitmap32);
+    function Draw(Graphic : TGraphic; x, y : Integer; alpha : Double = 1) : IImageFX; overload;
+    function Draw(stream: TStream; x: Integer; y: Integer; alpha: Double = 1) : IImageFX; overload;
+    function DrawCentered(Graphic : TGraphic; alpha : Double = 1) : IImageFX; overload;
+    function DrawCentered(stream: TStream; alpha : Double = 1) : IImageFX; overload;
+    function Rotate90 : IImageFX;
+    function Rotate180 : IImageFX;
+    function Rotate270 : IImageFX;
+    function RotateAngle(RotAngle : Single) : IImageFX;
+    function RotateBy(RoundAngle : Integer) : IImageFX;
+    function FlipX : IImageFX;
+    function FlipY : IImageFX;
+    function GrayScale : IImageFX;
+    function ScanlineH : IImageFX;
+    function ScanlineV : IImageFX;
+    function Lighten(StrenghtPercent : Integer = 30) : IImageFX;
+    function Darken(StrenghtPercent : Integer = 30) : IImageFX;
+    function Tint(mColor : TColor) : IImageFX;
+    function TintAdd(R, G , B : Integer) : IImageFX;
+    function TintBlue : IImageFX;
+    function TintRed : IImageFX;
+    function TintGreen : IImageFX;
+    function Solarize : IImageFX;
+    function Rounded(RoundLevel : Integer = 27) : IImageFX;
+    function AntiAliasing : IImageFX;
+    function SetAlpha(Alpha : Byte) : IImageFX;
     procedure SaveToPNG(outfile : string);
     procedure SaveToJPG(outfile : string);
     procedure SaveToBMP(outfile : string);
     procedure SaveToGIF(outfile : string);
     function AsBitmap : TBitmap;
+    function AsString(imgFormat : TImageFormat = ifJPG) : string;
+    procedure SaveToStream(stream : TStream; imgFormat : TImageFormat = ifJPG);
     function AsPNG : TPngImage;
     function AsJPG : TJpegImage;
     function AsGIF : TGifImage;
-    function AsString(imgFormat : TImageFormat = ifJPG) : string;
-    procedure SaveToStream(stream : TStream; imgFormat : TImageFormat = ifJPG);
   end;
 
 
 implementation
 
 
-constructor TImageFX.Create;
+constructor TImageFXGR32.Create;
 begin
   inherited Create;
   fBitmap := TBitmap32.Create;
 end;
 
-procedure TImageFX.InitBitmap(var bmp : TBitmap);
-begin
-  bmp.PixelFormat := pf32bit;
-  bmp.HandleType := bmDIB;
-  bmp.AlphaFormat := afDefined;
-end;
-
-constructor TImageFX.Create(fromfile: string);
-begin
-  Create;
-  LoadFromFile(fromfile);
-end;
-
-destructor TImageFX.Destroy;
+destructor TImageFXGR32.Destroy;
 begin
   if Assigned(fBitmap) then fBitmap.Free;
   inherited;
 end;
 
-{function TImageFX.LoadFromFile(fromfile: string) : TImageFX;
+{function TImageFXGR32.LoadFromFile(fromfile: string) : TImageFX;
 var
   fs: TFileStream;
   FirstBytes: AnsiString;
@@ -246,13 +229,9 @@ begin
   end;
 end;}
 
-function TImageFX.LoadFromFile(fromfile: string; CheckIfFileExists : Boolean = False) : TImageFX;
+function TImageFXGR32.LoadFromFile(fromfile: string; CheckIfFileExists : Boolean = False) : IImageFX;
 var
-  GPBitmap : TGPBitmap;
-  Status : TStatus;
-  PropItem : PPropertyItem;
-  PropSize: UINT;
-  Orientation : PWORD;
+  fs : TFileStream;
 begin
   Result := Self;
 
@@ -262,59 +241,42 @@ begin
     Exit;
   end;
 
-  GPBitmap := TGPBitmap.Create(fromfile);
+  //loads file into stream
+  fs := TFileStream.Create(fromfile,fmShareDenyWrite);
   try
-    //read EXIF orientation to rotate if needed
-    PropSize := GPBitmap.GetPropertyItemSize(PropertyTagOrientation);
-    GetMem(PropItem,PropSize);
-    try
-      Status := GPBitmap.GetPropertyItem(PropertyTagOrientation,PropSize,PropItem);
-      if Status = TStatus.Ok then
-      begin
-        Orientation := PWORD(PropItem^.Value);
-        case Orientation^ of
-          6 : GPBitmap.RotateFlip(Rotate90FlipNone);
-          8 : GPBitmap.RotateFlip(Rotate270FlipNone);
-          3 : GPBitmap.RotateFlip(Rotate180FlipNone);
-        end;
-      end;
-    finally
-      FreeMem(PropItem);
-    end;
-    GPBitmapToBitmap(GPBitmap,fBitmap);
-    LastResult := arOk;
+    Self.LoadFromStream(fs);
   finally
-    GPBitmap.Free;
+    fs.Free;
   end;
 end;
 
-function TImageFX.LoadFromStream(stream: TStream) : TImageFX;
+function TImageFXGR32.LoadFromStream(stream: TStream) : IImageFX;
 var
   Graphic : TGraphic;
   GraphicClass : TGraphicClass;
 begin
   Result := Self;
-
-  if (not Assigned(stream)) or (stream.Size < 1024) then
+  if (not Assigned(stream)) or (stream.Size = 0) then
   begin
     LastResult := arZeroBytes;
-    Exit;
+    raise Exception.Create('Stream is empty!');
   end;
   stream.Seek(0,soBeginning);
-  if not FindGraphicClass(Stream, GraphicClass) then raise EInvalidGraphic.Create('Unknow Graphic format');
+  if not FindGraphicClass(Stream,GraphicClass) then raise EInvalidGraphic.Create('Unknow Graphic format');
   Graphic := GraphicClass.Create;
   try
     stream.Seek(0,soBeginning);
     Graphic.LoadFromStream(stream);
-    fBitmap.Assign(Graphic);
-    //GetEXIFInfo(stream);
+    if (Graphic.Transparent) and (not (Graphic is TGIFImage)) then GraphicToBitmap32(Graphic,fBitmap)
+    else fBitmap.Assign(Graphic);
+    if ExifRotation then ProcessEXIFRotation(stream);
     LastResult := arOk;
   finally
     Graphic.Free;
   end;
 end;
 
-function TImageFX.LoadFromString(str: string) : TImageFX;
+function TImageFXGR32.LoadFromString(str: string) : IImageFX;
 var
   stream : TStringStream;
 begin
@@ -336,7 +298,7 @@ begin
   end;
 end;
 
-function TImageFX.LoadFromFileIcon(FileName : string; IconIndex : Word) : TImageFX;
+function TImageFXGR32.LoadFromFileIcon(FileName : string; IconIndex : Word) : IImageFX;
 var
    Icon : TIcon;
 begin
@@ -351,7 +313,7 @@ begin
   end;
 end;
 
-function TImageFX.LoadFromResource(ResourceName : string) : TImageFX;
+function TImageFXGR32.LoadFromResource(ResourceName : string) : IImageFX;
 var
    icon : TIcon;
    GPBitmap : TGPBitmap;
@@ -376,7 +338,7 @@ begin
   //DrawIcon(png.Canvas.Handle, 0, 0, Icon.Handle);
 end;
 
-function TImageFX.LoadFromImageList(imgList : TImageList; ImageIndex : Integer) : TImageFX;
+function TImageFXGR32.LoadFromImageList(imgList : TImageList; ImageIndex : Integer) : IImageFX;
 var
   icon : TIcon;
 begin
@@ -392,13 +354,13 @@ begin
   end;
 end;
 
-function TImageFX.LoadFromIcon(Icon : TIcon) : TImageFX;
+function TImageFXGR32.LoadFromIcon(Icon : TIcon) : IImageFX;
 begin
   Result := Self;
   fBitmap.Assign(Icon);
 end;
 
-function TImageFX.LoadFromFileExtension(aFilename : string; LargeIcon : Boolean) : TImageFX;
+function TImageFXGR32.LoadFromFileExtension(aFilename : string; LargeIcon : Boolean) : IImageFX;
 var
   icon : TIcon;
   aInfo : TSHFileInfo;
@@ -420,72 +382,13 @@ begin
   end;
 end;
 
-function TImageFX.LoadFromHTTP(urlImage : string; out HTTPReturnCode : Integer; RaiseExceptions : Boolean = False) : TImageFX;
-var
-  http : THTTPClient;
-  ms : TMemoryStream;
-  pic : TGraphic;
-begin
-  Result := Self;
-  HTTPReturnCode := 500;
-  LastResult := arUnknowFmtType;
-  ms := GetHTTPStream(urlImage,HTTPReturnCode);
-  try
-    if urlImage.EndsWith('.jpg',True) then  pic := TJPEGImage.Create
-      else if urlImage.EndsWith('.png',True) then pic := TPngImage.Create
-      else if urlImage.EndsWith('.bmp',True) then pic := TBitmap.Create
-      else if urlImage.EndsWith('.gif',True) then pic := TGIFImage.Create
-      else raise Exception.Create('Unknow Format');
-    try
-      pic.LoadFromStream(ms);
-      fBitmap.Assign(pic);
-      LastResult := arOk;
-    finally
-      pic.Free;
-    end;
-  finally
-    ms.Free;
-  end;
-end;
-
-function TImageFX.AspectRatio : Double;
+function TImageFXGR32.AspectRatio : Double;
 begin
   if Assigned(fBitmap) then Result := fBitmap.width / fBitmap.Height
     else Result := 0;
 end;
 
-
-function TImageFX.AspectRatioStr : string;
-begin
-  if Assigned(fBitmap) then
-  begin
-    Result := GetAspectRatio(fBitmap.Width,fBitmap.Height);
-  end
-  else Result := 'N/A';
-end;
-
-class function TImageFX.GetAspectRatio(cWidth, cHeight : Integer) : string;
-var
-  ar : Integer;
-begin
-  if cHeight = 0 then Exit;
-
-  ar := GCD(cWidth,cHeight);
-  Result := Format('%d:%d',[cWidth div ar, cHeight div ar]);
-end;
-
-
-function Lerp(a, b: Byte; t: Double): Byte;
-var
-  tmp: Double;
-begin
-  tmp := t*a + (1-t)*b;
-  if tmp<0 then result := 0 else
-  if tmp>255 then result := 255 else
-  result := Round(tmp);
-end;
-
-procedure TImageFX.GetResolution(var x,y : Integer);
+procedure TImageFXGR32.GetResolution(var x,y : Integer);
 begin
   if Assigned(fBitmap) then
   begin
@@ -501,29 +404,22 @@ begin
   end;
 end;
 
-function TImageFX.GetResolution : string;
-begin
-  if Assigned(fBitmap) then
-  begin
-    Result := Format('%d x %d',[fBitmap.Width,fBitmap.Height]);
-    LastResult := arOk;
-  end
-  else
-  begin
-    Result := 'N/A';
-    LastResult := arCorruptedData;
-  end;
-end;
-
-function TImageFX.Clear : TImageFX;
+function TImageFXGR32.Clear(pcolor : TColor = clNone) : IImageFX;
 begin
   Result := Self;
   fBitmap.Clear;
-  fBitmap.FillRect(0,0,fBitmap.Width,fBitmap.Height,Color32(clNone));
+  fBitmap.FillRect(0,0,fBitmap.Width,fBitmap.Height,pColor);
   LastResult := arOk;
 end;
 
-function TImageFX.ResizeImage(w, h : Integer; ResizeOptions : TResizeOptions) : TImageFX;
+function TImageFXGR32.Clone : IImageFX;
+begin
+  Result := TImageFXGR32.Create;
+  (Result as TImageFXGR32).fBitmap.Assign(Self.fBitmap);
+  CloneValues(Result);
+end;
+
+function TImageFXGR32.ResizeImage(w, h : Integer; ResizeOptions : TResizeOptions) : IImageFX;
 var
   bmp32 : TBitmap32;
   Resam : TCustomResampler;
@@ -661,7 +557,7 @@ begin
         //all cases no resizes, but CropToFill needs to grow to fill target size
         if ResizeOptions.ResizeMode <> rmCropToFill then
         begin
-          if ResizeOptions.SkipSmaller then
+          if not ResizeOptions.SkipSmaller then
           begin
             LastResult := arAlreadyOptim;
             nw := srcRect.Width;
@@ -719,12 +615,12 @@ begin
   end;
 end;
 
-function TImageFX.Resize(w, h : Integer) : TImageFX;
+function TImageFXGR32.Resize(w, h : Integer) : IImageFX;
 begin
   Result := ResizeImage(w,h,ResizeOptions);
 end;
 
-function TImageFX.Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : TImageFX;
+function TImageFXGR32.Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : IImageFX;
 var
   ResizeOptions : TResizeOptions;
 begin
@@ -739,44 +635,84 @@ begin
   end;
 end;
 
-function TImageFX.Draw(png : TPngImage; alpha : Double = 1) : TImageFX;
-begin
-  Result := Self;
-  Draw(png, (fBitmap.Width - png.Width) div 2, (fBitmap.Height - png.Height) div 2);
-end;
-
-function TImageFX.Draw(png : TPngImage; x, y : Integer; alpha : Double = 1) : TImageFX;
-begin
-  Result := Self;
-  fBitmap.DrawMode := TDrawMode.dmTransparent;
-  fBitmap.Canvas.Draw(x,y,png);
-end;
-
-function TImageFX.Draw(stream: TStream; x: Integer; y: Integer; alpha: Double = 1) : TImageFX;
+procedure TImageFXGR32.Assign(Graphic : TGraphic);
 var
-  overlay : TPngImage;
-  Buffer : TBytes;
-  Size : Int64;
+  ms : TMemoryStream;
+begin
+  ms := TMemoryStream.Create;
+  try
+    Graphic.SaveToStream(ms);
+    ms.Seek(0,soBeginning);
+    LoadFromStream(ms);
+  finally
+    ms.Free;
+  end;
+end;
+
+function TImageFXGR32.Draw(Graphic : TGraphic; x, y : Integer; alpha : Double = 1) : IImageFX;
+var
+  bmp : TBitmap32;
+begin
+  Result := Self;
+  if alpha = 1 then
+  begin
+    fBitmap.Canvas.Draw(x,y,Graphic);
+  end
+  else
+  begin
+    bmp := TBitmap32.Create;
+    try
+      GraphicToBitmap32(Graphic,bmp);
+      bmp.MasterAlpha := Round(255 * alpha);
+      bmp.DrawMode := TDrawMode.dmBlend;
+      bmp.DrawTo(fBitmap,x,y);
+    finally
+      bmp.Free;
+    end;
+  end;
+end;
+
+procedure TImageFXGR32.GraphicToBitmap32(Graphic : TGraphic; var bmp32 : TBitmap32);
+begin
+  bmp32.Width := Graphic.Width;
+  bmp32.Height := Graphic.Height;
+  bmp32.Canvas.Draw(0,0,Graphic);
+end;
+
+function TImageFXGR32.Draw(stream: TStream; x: Integer; y: Integer; alpha: Double = 1) : IImageFX;
+var
+  GraphicClass : TGraphicClass;
+  overlay : TGraphic;
 begin
   //get overlay image
-  overlay.LoadFromStream(stream);
-  //needs x or y center image
-  if x = -1 then x := (fBitmap.Width - overlay.Width) div 2;
-  if y = -1 then y := (fBitmap.Height - overlay.Height) div 2;
-  Result := Draw(overlay,x,y,alpha);
+  stream.Seek(0,soBeginning);
+  if not FindGraphicClass(stream,GraphicClass) then raise Exception.Create('overlary unknow graphic format');
+
+  overlay := GraphicClass.Create;
+  try
+    stream.Seek(0,soBeginning);
+    overlay.LoadFromStream(stream);
+    if overlay.Empty then raise Exception.Create('Overlay error!');
+    //needs x or y center image
+    if x = -1 then x := (fBitmap.Width - overlay.Width) div 2;
+    if y = -1 then y := (fBitmap.Height - overlay.Height) div 2;
+    Result := Draw(overlay,x,y,alpha);
+  finally
+    overlay.Free;
+  end;
 end;
 
-function TImageFX.DrawCentered(png : TPngImage; alpha : Double = 1) : TImageFX;
+function TImageFXGR32.DrawCentered(Graphic : TGraphic; alpha : Double = 1) : IImageFX;
 begin
-  Result := Draw(png,(fBitmap.Width - png.Width) div 2, (fBitmap.Height - png.Height) div 2,alpha);
+  Result := Draw(Graphic,(fBitmap.Width - Graphic.Width) div 2, (fBitmap.Height - Graphic.Height) div 2,alpha);
 end;
 
-function TImageFX.DrawCentered(stream: TStream; alpha : Double = 1) : TImageFX;
+function TImageFXGR32.DrawCentered(stream: TStream; alpha : Double = 1) : IImageFX;
 begin
   Result := Draw(stream,-1,-1,alpha);
 end;
 
-function TImageFX.NewBitmap(w, h: Integer): TImageFx;
+function TImageFXGR32.NewBitmap(w, h: Integer): IImageFX;
 begin
   if Assigned(Self.fBitmap) then
   begin
@@ -786,7 +722,12 @@ begin
   else  Result := Self;
 end;
 
-function TImageFX.Rotate90 : TImageFX;
+function TImageFXGR32.IsEmpty : Boolean;
+begin
+  Result := fBitmap.Empty;
+end;
+
+function TImageFXGR32.Rotate90 : IImageFX;
 var
   bmp32 : TBitmap32;
 begin
@@ -802,7 +743,7 @@ begin
   end;
 end;
 
-function TImageFX.Rotate180 : TImageFX;
+function TImageFXGR32.Rotate180 : IImageFX;
 var
   bmp32 : TBitmap32;
 begin
@@ -818,7 +759,7 @@ begin
   end;
 end;
 
-function TImageFX.RotateAngle(RotAngle: Single) : TImageFX;
+function TImageFXGR32.RotateAngle(RotAngle: Single) : IImageFX;
 var
   SrcR: Integer;
   SrcB: Integer;
@@ -874,7 +815,13 @@ begin
   end;
 end;
 
-function TImageFX.Rotate270 : TImageFX;
+function TImageFXGR32.RotateBy(RoundAngle: Integer): IImageFX;
+begin
+  Result := RotateAngle(RoundAngle);
+  LastResult := arOk;
+end;
+
+function TImageFXGR32.Rotate270 : IImageFX;
 var
   bmp32 : TBitmap32;
 begin
@@ -890,7 +837,7 @@ begin
   end;
 end;
 
-function TImageFX.FlipX : TImageFX;
+function TImageFXGR32.FlipX : IImageFX;
 var
   bmp32 : TBitmap32;
 begin
@@ -906,7 +853,7 @@ begin
   end;
 end;
 
-function TImageFX.FlipY : TImageFX;
+function TImageFXGR32.FlipY : IImageFX;
 var
   bmp32 : TBitmap32;
 begin
@@ -922,7 +869,7 @@ begin
   end;
 end;
 
-function TImageFX.GrayScale : TImageFX;
+function TImageFXGR32.GrayScale : IImageFX;
 begin
   Result := Self;
   LastResult := arColorizeError;
@@ -930,7 +877,12 @@ begin
   LastResult := arOk;
 end;
 
-function TImageFX.Lighten(StrenghtPercent : Integer = 30) : TImageFX;
+function TImageFXGR32.IsGray: Boolean;
+begin
+  raise ENotImplemented.Create('Not implemented!');
+end;
+
+function TImageFXGR32.Lighten(StrenghtPercent : Integer = 30) : IImageFX;
 var
   Bits: PColor32Entry;
   I, J: Integer;
@@ -958,7 +910,7 @@ begin
   end;
 end;
 
-function TImageFX.Darken(StrenghtPercent : Integer = 30) : TImageFX;
+function TImageFXGR32.Darken(StrenghtPercent : Integer = 30) : IImageFX;
 var
   Bits: PColor32Entry;
   I, J: Integer;
@@ -990,7 +942,7 @@ begin
   end;
 end;
 
-function TImageFX.Tint(mColor : TColor) : TImageFX;
+function TImageFXGR32.Tint(mColor : TColor) : IImageFX;
 var
   Bits: PColor32Entry;
   Color: TColor32Entry;
@@ -1024,7 +976,7 @@ begin
   end;
 end;
 
-function TImageFX.TintAdd(R, G , B : Integer) : TImageFX;
+function TImageFXGR32.TintAdd(R, G , B : Integer) : IImageFX;
 var
   Bits: PColor32Entry;
   I, J: Integer;
@@ -1054,39 +1006,39 @@ begin
   end;
 end;
 
-function TImageFX.TintBlue : TImageFX;
+function TImageFXGR32.TintBlue : IImageFX;
 begin
   Result := Tint(clBlue);
 end;
 
-function TImageFX.TintRed : TImageFX;
+function TImageFXGR32.TintRed : IImageFX;
 begin
   Result := Tint(clRed);
 end;
 
-function TImageFX.TintGreen : TImageFX;
+function TImageFXGR32.TintGreen : IImageFX;
 begin
   Result := Tint(clGreen);
 end;
 
-function TImageFX.Solarize : TImageFX;
+function TImageFXGR32.Solarize : IImageFX;
 begin
   Result := TintAdd(255,-1,-1);
 end;
 
-function TImageFX.ScanlineH;
+function TImageFXGR32.ScanlineH;
 begin
   Result := Self;
   DoScanLines(smHorizontal);
 end;
 
-function TImageFX.ScanlineV;
+function TImageFXGR32.ScanlineV;
 begin
   Result := Self;
   DoScanLines(smVertical);
 end;
 
-procedure TImageFX.DoScanLines(ScanLineMode : TScanlineMode);
+procedure TImageFXGR32.DoScanLines(ScanLineMode : TScanlineMode);
 var
   Bits: PColor32Entry;
   Color: TColor32Entry;
@@ -1128,7 +1080,7 @@ begin
   end;
 end;
 
-procedure TImageFX.SaveToPNG(outfile : string);
+procedure TImageFXGR32.SaveToPNG(outfile : string);
 var
   png : TPngImage;
 begin
@@ -1142,7 +1094,7 @@ begin
   LastResult := arOk;
 end;
 
-procedure TImageFX.SaveToJPG(outfile : string);
+procedure TImageFXGR32.SaveToJPG(outfile : string);
 var
   jpg : TJPEGImage;
 begin
@@ -1156,7 +1108,7 @@ begin
   LastResult := arOk;
 end;
 
-procedure TImageFX.SaveToBMP(outfile : string);
+procedure TImageFXGR32.SaveToBMP(outfile : string);
 var
   bmp : TBitmap;
 begin
@@ -1170,7 +1122,7 @@ begin
   LastResult := arOk;
 end;
 
-procedure TImageFX.SaveToGIF(outfile : string);
+procedure TImageFXGR32.SaveToGIF(outfile : string);
 var
   gif : TGIFImage;
 begin
@@ -1185,10 +1137,12 @@ begin
 end;
 
 
-procedure TImageFX.SaveToStream(stream : TStream; imgFormat : TImageFormat = ifJPG);
+procedure TImageFXGR32.SaveToStream(stream : TStream; imgFormat : TImageFormat = ifJPG);
 var
   graf : TGraphic;
 begin
+  if stream.Position > 0 then stream.Seek(0,soBeginning);
+
   case imgFormat of
     ifBMP:
       begin
@@ -1233,7 +1187,7 @@ begin
   end;
 end;
 
-procedure TImageFX.GPBitmapToBitmap(gpbmp : TGPBitmap; bmp : TBitmap32);
+procedure TImageFXGR32.GPBitmapToBitmap(gpbmp : TGPBitmap; bmp : TBitmap32);
 var
   Graphics : TGPGraphics;
 begin
@@ -1258,7 +1212,7 @@ begin
   end;
 end;
 
-function TImageFX.GetFileInfo(AExt : string; var AInfo : TSHFileInfo; ALargeIcon : Boolean = False) : Boolean;
+function TImageFXGR32.GetFileInfo(AExt : string; var AInfo : TSHFileInfo; ALargeIcon : Boolean = False) : Boolean;
 var uFlags : integer;
 begin
   FillMemory(@AInfo,SizeOf(TSHFileInfo),0);
@@ -1269,7 +1223,7 @@ begin
     else Result := True;
 end;
 
-function TImageFX.AsBitmap : TBitmap;
+function TImageFXGR32.AsBitmap : TBitmap;
 begin
   LastResult := arConversionError;
   Result := TBitmap.Create;
@@ -1278,7 +1232,7 @@ begin
   LastResult := arOk;
 end;
 
-function TImageFX.AsPNG: TPngImage;
+function TImageFXGR32.AsPNG: TPngImage;
 var
   n, a: Integer;
   PNB: TPngImage;
@@ -1316,7 +1270,7 @@ begin
   end;
 end;
 
-function TImageFX.AsJPG : TJPEGImage;
+function TImageFXGR32.AsJPG : TJPEGImage;
 var
   jpg : TJPEGImage;
   bmp : TBitmap;
@@ -1335,7 +1289,7 @@ begin
   LastResult := arOk;
 end;
 
-function TImageFX.AsGIF : TGifImage;
+function TImageFXGR32.AsGIF : TGifImage;
 var
   gif : TGIFImage;
   bmp : TBitmap;
@@ -1352,7 +1306,7 @@ begin
   LastResult := arOk;
 end;
 
-function TImageFX.AsString(imgFormat : TImageFormat = ifJPG) : string;
+function TImageFXGR32.AsString(imgFormat : TImageFormat = ifJPG) : string;
 var
   ss : TStringStream;
 begin
@@ -1373,22 +1327,12 @@ begin
   end;
 end;
 
-function TImageFX.GetPixel(const x, y: Integer): TPixelInfo;
+function TImageFXGR32.GetPixel(const x, y: Integer): TPixelInfo;
 begin
   Result := GetPixelImage(x,y,fBitmap);
 end;
 
-procedure TImageFX.CleanTransparentPng(var png: TPngImage; NewWidth, NewHeight: Integer);
-var
-  BasePtr: Pointer;
-begin
-  png := TPngImage.CreateBlank(COLOR_RGBALPHA, 16, NewWidth, NewHeight);
-
-  BasePtr := png.AlphaScanline[0];
-  ZeroMemory(BasePtr, png.Header.Width * png.Header.Height);
-end;
-
-function TImageFX.Rounded(RoundLevel : Integer = 27) : TImageFX;
+function TImageFXGR32.Rounded(RoundLevel : Integer = 27) : IImageFX;
 var
   rgn : HRGN;
   auxbmp : TBitmap;
@@ -1415,7 +1359,7 @@ begin
   end;
 end;
 
-function TImageFX.AntiAliasing : TImageFX;
+function TImageFXGR32.AntiAliasing : IImageFX;
 var
   bmp : TBitmap;
 begin
@@ -1429,23 +1373,23 @@ begin
   end;
 end;
 
-function TImageFX.SetAlpha(Alpha : Byte) : TImageFX;
+function TImageFXGR32.SetAlpha(Alpha : Byte) : IImageFX;
 begin
   Result := Self;
   //DoAlpha(fBitmap,Alpha);
 end;
 
-procedure TImageFX.SetPixel(const x, y: Integer; const P: TPixelInfo);
+procedure TImageFXGR32.SetPixel(const x, y: Integer; const P: TPixelInfo);
 begin
   SetPixelImage(x,y,P,fBitmap);
 end;
 
-procedure TImageFX.SetPixelImage(const x, y: Integer; const P: TPixelInfo; bmp32 : TBitmap32);
+procedure TImageFXGR32.SetPixelImage(const x, y: Integer; const P: TPixelInfo; bmp32 : TBitmap32);
 begin
   bmp32.Pixel[x,y] := RGB(P.R,P.G,P.B);
 end;
 
-function TImageFX.GetPixelImage(const x, y: Integer; bmp32 : TBitmap32) : TPixelInfo;
+function TImageFXGR32.GetPixelImage(const x, y: Integer; bmp32 : TBitmap32) : TPixelInfo;
 var
   lRGB : TRGB;
 begin
@@ -1453,6 +1397,11 @@ begin
   Result.R := lRGB.R;
   Result.G := lRGB.G;
   Result.B := lRGB.B;
+end;
+
+function TImageFXGR32.GetResolution: string;
+begin
+
 end;
 
 end.
