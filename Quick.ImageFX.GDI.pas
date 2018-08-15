@@ -7,7 +7,7 @@
   Author      : Kike P�rez
   Version     : 4.0
   Created     : 10/05/2013
-  Modified    : 27/05/2018
+  Modified    : 11/08/2018
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -83,8 +83,8 @@ type
     function AntiAliasing: IImageFX;
     function AsPNG2: TPngImage;
     class function ColorIsLight(Color: TColor): Boolean; static;
-    function ExtractFileIcon(FileName: string; IconIndex: Word): IImageFX;
-    function ExtractResourceIcon(ResourceName: string): IImageFX;
+    function ExtractFileIcon(const FileName: string; IconIndex: Word): IImageFX;
+    function ExtractResourceIcon(const ResourceName: string): IImageFX;
     function Resize2(x, y: Integer; NoResizeIfSmaller: Boolean = False): IImageFX;
     function RotateFlip(RotateFlipType: TRotateFlipType): IImageFX;
     function SetAlpha(Alpha: Byte): IImageFX;
@@ -97,14 +97,14 @@ type
     destructor Destroy; override;
     property Pixel[const x, y: Integer]: TPixelInfo read GetPixel write SetPixel;
     function NewBitmap(w,h : Integer) : IImageFX;
-    function LoadFromFile(fromfile : string; CheckIfFileExists : Boolean = False) : IImageFX;
+    function LoadFromFile(const fromfile : string; CheckIfFileExists : Boolean = False) : IImageFX;
     function LoadFromStream(stream : TStream) : IImageFX;
-    function LoadFromString(str : string) : IImageFX;
+    function LoadFromString(const str : string) : IImageFX;
     function LoadFromImageList(imgList : TImageList; ImageIndex : Integer) : IImageFX;
     function LoadFromIcon(Icon : TIcon) : IImageFX;
-    function LoadFromFileIcon(FileName : string; IconIndex : Word) : IImageFX;
-    function LoadFromFileExtension(aFilename : string; LargeIcon : Boolean) : IImageFX;
-    function LoadFromResource(ResourceName : string) : IImageFX;
+    function LoadFromFileIcon(const FileName : string; IconIndex : Word) : IImageFX;
+    function LoadFromFileExtension(const aFilename : string; LargeIcon : Boolean) : IImageFX;
+    function LoadFromResource(const ResourceName : string) : IImageFX;
     procedure GetResolution(var x,y : Integer); overload;
     function AspectRatio : Double;
     function IsEmpty : Boolean;
@@ -121,10 +121,10 @@ type
     function AsJPG : TJpegImage;
     function AsGIF : TGifImage;
     function AsString(imgFormat : TImageFormat = ifJPG) : string;
-    procedure SaveToPNG(outfile : string);
-    procedure SaveToJPG(outfile : string);
-    procedure SaveToBMP(outfile : string);
-    procedure SaveToGIF(outfile : string);
+    procedure SaveToPNG(const outfile : string);
+    procedure SaveToJPG(const outfile : string);
+    procedure SaveToBMP(const outfile : string);
+    procedure SaveToGIF(const outfile : string);
     procedure SaveToStream(stream : TStream; imgFormat : TImageFormat = ifJPG);
     function Resize(w, h : Integer) : IImageFX; overload;
     function Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : IImageFX; overload;
@@ -235,7 +235,7 @@ begin
     else Result := 0;
 end;
 
-function TImageFXGDI.LoadFromFile(fromfile : string; CheckIfFileExists : Boolean = False) : IImageFX;
+function TImageFXGDI.LoadFromFile(const fromfile : string; CheckIfFileExists : Boolean = False) : IImageFX;
 var
   GPBitmap : TGPBitmap;
 begin
@@ -288,14 +288,13 @@ begin
   end;
 end;
 
-function TImageFXGDI.LoadFromString(str: string) : IImageFX;
+function TImageFXGDI.LoadFromString(const str: string) : IImageFX;
 var
   stream : TStringStream;
 begin
   Result := Self;
   if str = '' then Exit;
-  str := Base64Decode(str);
-  stream := TStringStream.Create(str);
+  stream := TStringStream.Create(Base64Decode(str));
   try
     fBitmap.LoadFromStream(stream);
   finally
@@ -846,7 +845,7 @@ begin
   end;
 end;
 
-procedure TImageFXGDI.SaveToPNG(outfile : string);
+procedure TImageFXGDI.SaveToPNG(const outfile : string);
 var
   Encoder: TGUID;
   GPBitmap : TGPBitmap;
@@ -957,7 +956,7 @@ begin
   end;
 end;
 
-procedure TImageFXGDI.SaveToJPG(outfile : string);
+procedure TImageFXGDI.SaveToJPG(const outfile : string);
 var
   Encoder: TGUID;
   GPBitmap : TGPBitmap;
@@ -972,7 +971,7 @@ begin
   end;
 end;
 
-procedure TImageFXGDI.SaveToBMP(outfile : string);
+procedure TImageFXGDI.SaveToBMP(const outfile : string);
 var
   Encoder: TGUID;
   GPBitmap : TGPBitmap;
@@ -987,7 +986,7 @@ begin
   end;
 end;
 
-procedure TImageFXGDI.SaveToGIF(outfile : string);
+procedure TImageFXGDI.SaveToGIF(const outfile : string);
 var
   Encoder: TGUID;
   GPBitmap : TGPBitmap;
@@ -1286,7 +1285,7 @@ Begin
   end;
 end;
 
-function TImageFXGDI.ExtractFileIcon(FileName : string; IconIndex : Word) : IImageFX;
+function TImageFXGDI.ExtractFileIcon(const FileName : string; IconIndex : Word) : IImageFX;
 var
    Icon : TIcon;
    GPBitmap : TGPBitmap;
@@ -1310,7 +1309,7 @@ begin
   //DrawIcon(png.Canvas.Handle, 0, 0, Icon.Handle) ;
 end;
 
-function TImageFXGDI.ExtractResourceIcon(ResourceName : string) : IImageFX;
+function TImageFXGDI.ExtractResourceIcon(const ResourceName : string) : IImageFX;
 var
    icon : TIcon;
    GPBitmap : TGPBitmap;
@@ -1332,7 +1331,7 @@ begin
   //DrawIcon(png.Canvas.Handle, 0, 0, Icon.Handle);
 end;
 
-function TImageFXGDI.LoadFromFileIcon(FileName : string; IconIndex : Word) : IImageFX;
+function TImageFXGDI.LoadFromFileIcon(const FileName : string; IconIndex : Word) : IImageFX;
 var
    Icon : TIcon;
 begin
@@ -1353,7 +1352,7 @@ begin
   fBitmap.Assign(Icon);
 end;
 
-function TImageFXGDI.LoadFromResource(ResourceName : string) : IImageFX;
+function TImageFXGDI.LoadFromResource(const ResourceName : string) : IImageFX;
 var
    icon : TIcon;
    GPBitmap : TGPBitmap;
@@ -1378,7 +1377,7 @@ begin
   //DrawIcon(png.Canvas.Handle, 0, 0, Icon.Handle);
 end;
 
-function TImageFXGDI.LoadFromFileExtension(aFilename : string; LargeIcon : Boolean) : IImageFX;
+function TImageFXGDI.LoadFromFileExtension(const aFilename : string; LargeIcon : Boolean) : IImageFX;
 var
   icon : TIcon;
   aInfo : TSHFileInfo;

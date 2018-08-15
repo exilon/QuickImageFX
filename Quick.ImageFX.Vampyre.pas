@@ -7,7 +7,7 @@
   Author      : Kike Pérez
   Version     : 4.0
   Created     : 12/12/2017
-  Modified    : 27/05/2018
+  Modified    : 11/08/2018
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -84,7 +84,6 @@ type
   private
     procedure DoScanlines(ScanlineMode : TScanlineMode);
     function ResizeImage(w, h : Integer; ResizeOptions : TResizeOptions) : IImageFX;
-    function GetFileInfo(AExt : string; var AInfo : TSHFileInfo; ALargeIcon : Boolean = false) : boolean;
     procedure SetPixelImage(const x, y: Integer; const P: TPixelInfo; bmp32 : TBitmap);
     function GetPixelImage(const x, y: Integer; bmp32 : TBitmap): TPixelInfo;
   protected
@@ -97,14 +96,14 @@ type
     function NewBitmap(w, h : Integer) : IImageFX;
     property Pixel[const x, y: Integer]: TPixelInfo read GetPixel write SetPixel;
     function IsEmpty : Boolean;
-    function LoadFromFile(fromfile : string; CheckIfFileExists : Boolean = False) : IImageFX;
+    function LoadFromFile(const fromfile : string; CheckIfFileExists : Boolean = False) : IImageFX;
     function LoadFromStream(stream : TStream) : IImageFX;
-    function LoadFromString(str : string) : IImageFX;
+    function LoadFromString(const str : string) : IImageFX;
     function LoadFromImageList(imgList : TImageList; ImageIndex : Integer) : IImageFX;
     function LoadFromIcon(Icon : TIcon) : IImageFX;
-    function LoadFromFileIcon(FileName : string; IconIndex : Word) : IImageFX;
-    function LoadFromFileExtension(aFilename : string; LargeIcon : Boolean) : IImageFX;
-    function LoadFromResource(ResourceName : string) : IImageFX;
+    function LoadFromFileIcon(const FileName : string; IconIndex : Word) : IImageFX;
+    function LoadFromFileExtension(const aFilename : string; LargeIcon : Boolean) : IImageFX;
+    function LoadFromResource(const ResourceName : string) : IImageFX;
     function Clone : IImageFX;
     function IsGray : Boolean;
     procedure GetResolution(var x,y : Integer); overload;
@@ -139,10 +138,10 @@ type
     function Rounded(RoundLevel : Integer = 27) : IImageFX;
     function AntiAliasing : IImageFX;
     function SetAlpha(Alpha : Byte) : IImageFX;
-    procedure SaveToPNG(outfile : string);
-    procedure SaveToJPG(outfile : string);
-    procedure SaveToBMP(outfile : string);
-    procedure SaveToGIF(outfile : string);
+    procedure SaveToPNG(const outfile : string);
+    procedure SaveToJPG(const outfile : string);
+    procedure SaveToBMP(const outfile : string);
+    procedure SaveToGIF(const outfile : string);
     function AsBitmap : TBitmap;
     function AsString(imgFormat : TImageFormat = ifJPG) : string;
     procedure SaveToStream(stream : TStream; imgFormat : TImageFormat = ifJPG);
@@ -227,7 +226,7 @@ begin
   end;
 end;}
 
-function TImageFXVampyre.LoadFromFile(fromfile: string; CheckIfFileExists : Boolean = False) : IImageFX;
+function TImageFXVampyre.LoadFromFile(const fromfile: string; CheckIfFileExists : Boolean = False) : IImageFX;
 var
   //GPBitmap : TGPBitmap;
   //Status : TStatus;
@@ -297,7 +296,7 @@ begin
   LastResult := arOk;
 end;
 
-function TImageFXVampyre.LoadFromString(str: string) : IImageFX;
+function TImageFXVampyre.LoadFromString(const str: string) : IImageFX;
 var
   stream : TStringStream;
 begin
@@ -309,8 +308,7 @@ begin
     Exit;
   end;
 
-  str := Base64Decode(str);
-  stream := TStringStream.Create(str);
+  stream := TStringStream.Create(Base64Decode(str));
   try
     LoadFromStream(stream);
     LastResult := arOk;
@@ -319,7 +317,7 @@ begin
   end;
 end;
 
-function TImageFXVampyre.LoadFromFileIcon(FileName : string; IconIndex : Word) : IImageFX;
+function TImageFXVampyre.LoadFromFileIcon(const FileName : string; IconIndex : Word) : IImageFX;
 var
    Icon : TIcon;
 begin
@@ -334,7 +332,7 @@ begin
   end;
 end;
 
-function TImageFXVampyre.LoadFromResource(ResourceName : string) : IImageFX;
+function TImageFXVampyre.LoadFromResource(const ResourceName : string) : IImageFX;
 var
    icon : TIcon;
    ms : TMemoryStream;
@@ -394,7 +392,7 @@ begin
   end;
 end;
 
-function TImageFXVampyre.LoadFromFileExtension(aFilename : string; LargeIcon : Boolean) : IImageFX;
+function TImageFXVampyre.LoadFromFileExtension(const aFilename : string; LargeIcon : Boolean) : IImageFX;
 var
   icon : TIcon;
   aInfo : TSHFileInfo;
@@ -1043,7 +1041,7 @@ begin
   end;
 end;}
 
-procedure TImageFXVampyre.SaveToPNG(outfile : string);
+procedure TImageFXVampyre.SaveToPNG(const outfile : string);
 var
   png : TPngImage;
 begin
@@ -1057,7 +1055,7 @@ begin
   LastResult := arOk;
 end;
 
-procedure TImageFXVampyre.SaveToJPG(outfile : string);
+procedure TImageFXVampyre.SaveToJPG(const outfile : string);
 var
   jpg : TJPEGImage;
 begin
@@ -1071,7 +1069,7 @@ begin
   LastResult := arOk;
 end;
 
-procedure TImageFXVampyre.SaveToBMP(outfile : string);
+procedure TImageFXVampyre.SaveToBMP(const outfile : string);
 var
   bmp : TBitmap;
 begin
@@ -1085,7 +1083,7 @@ begin
   LastResult := arOk;
 end;
 
-procedure TImageFXVampyre.SaveToGIF(outfile : string);
+procedure TImageFXVampyre.SaveToGIF(const outfile : string);
 var
   gif : TGIFImage;
 begin
@@ -1142,17 +1140,6 @@ begin
         SaveImageToStream('gif',stream,fpImage^);
       end;
   end;
-end;
-
-function TImageFXVampyre.GetFileInfo(AExt : string; var AInfo : TSHFileInfo; ALargeIcon : Boolean = False) : Boolean;
-var uFlags : integer;
-begin
-  FillMemory(@AInfo,SizeOf(TSHFileInfo),0);
-  uFlags := SHGFI_ICON+SHGFI_TYPENAME+SHGFI_USEFILEATTRIBUTES;
-  if ALargeIcon then uFlags := uFlags + SHGFI_LARGEICON
-    else uFlags := uFlags + SHGFI_SMALLICON;
-  if SHGetFileInfo(PChar(AExt),FILE_ATTRIBUTE_NORMAL,AInfo,SizeOf(TSHFileInfo),uFlags) = 0 then Result := False
-    else Result := True;
 end;
 
 function TImageFXVampyre.AsBitmap : TBitmap;

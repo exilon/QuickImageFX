@@ -7,7 +7,7 @@
   Author      : Kike P�rez
   Version     : 4.0
   Created     : 10/04/2013
-  Modified    : 27/05/2018
+  Modified    : 11/08/2018
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -99,14 +99,14 @@ type
     function NewBitmap(w, h : Integer) : IImageFX;
     property Pixel[const x, y: Integer]: TPixelInfo read GetPixel write SetPixel;
     function IsEmpty : Boolean;
-    function LoadFromFile(fromfile : string; CheckIfFileExists : Boolean = False) : IImageFX;
+    function LoadFromFile(const fromfile : string; CheckIfFileExists : Boolean = False) : IImageFX;
     function LoadFromStream(stream : TStream) : IImageFX;
-    function LoadFromString(str : string) : IImageFX;
+    function LoadFromString(const str : string) : IImageFX;
     function LoadFromImageList(imgList : TImageList; ImageIndex : Integer) : IImageFX;
     function LoadFromIcon(Icon : TIcon) : IImageFX;
-    function LoadFromFileIcon(FileName : string; IconIndex : Word) : IImageFX;
-    function LoadFromFileExtension(aFilename : string; LargeIcon : Boolean) : IImageFX;
-    function LoadFromResource(ResourceName : string) : IImageFX;
+    function LoadFromFileIcon(const FileName : string; IconIndex : Word) : IImageFX;
+    function LoadFromFileExtension(const aFilename : string; LargeIcon : Boolean) : IImageFX;
+    function LoadFromResource(const ResourceName : string) : IImageFX;
     function Clone : IImageFX;
     function IsGray : Boolean;
     procedure Assign(Graphic : TGraphic);
@@ -142,10 +142,10 @@ type
     function Rounded(RoundLevel : Integer = 27) : IImageFX;
     function AntiAliasing : IImageFX;
     function SetAlpha(Alpha : Byte) : IImageFX;
-    procedure SaveToPNG(outfile : string);
-    procedure SaveToJPG(outfile : string);
-    procedure SaveToBMP(outfile : string);
-    procedure SaveToGIF(outfile : string);
+    procedure SaveToPNG(const outfile : string);
+    procedure SaveToJPG(const outfile : string);
+    procedure SaveToBMP(const outfile : string);
+    procedure SaveToGIF(const outfile : string);
     function AsBitmap : TBitmap;
     function AsString(imgFormat : TImageFormat = ifJPG) : string;
     procedure SaveToStream(stream : TStream; imgFormat : TImageFormat = ifJPG);
@@ -229,7 +229,7 @@ begin
   end;
 end;}
 
-function TImageFXGR32.LoadFromFile(fromfile: string; CheckIfFileExists : Boolean = False) : IImageFX;
+function TImageFXGR32.LoadFromFile(const fromfile: string; CheckIfFileExists : Boolean = False) : IImageFX;
 var
   fs : TFileStream;
 begin
@@ -276,7 +276,7 @@ begin
   end;
 end;
 
-function TImageFXGR32.LoadFromString(str: string) : IImageFX;
+function TImageFXGR32.LoadFromString(const str: string) : IImageFX;
 var
   stream : TStringStream;
 begin
@@ -288,17 +288,16 @@ begin
     Exit;
   end;
 
-  str := Base64Decode(str);
-  stream := TStringStream.Create(str);
+  stream := TStringStream.Create(Base64Decode(str));
   try
-    fBitmap.LoadFromStream(stream);
+    LoadFromStream(stream);
     LastResult := arOk;
   finally
     stream.Free;
   end;
 end;
 
-function TImageFXGR32.LoadFromFileIcon(FileName : string; IconIndex : Word) : IImageFX;
+function TImageFXGR32.LoadFromFileIcon(const FileName : string; IconIndex : Word) : IImageFX;
 var
    Icon : TIcon;
 begin
@@ -313,7 +312,7 @@ begin
   end;
 end;
 
-function TImageFXGR32.LoadFromResource(ResourceName : string) : IImageFX;
+function TImageFXGR32.LoadFromResource(const ResourceName : string) : IImageFX;
 var
    icon : TIcon;
    GPBitmap : TGPBitmap;
@@ -360,7 +359,7 @@ begin
   fBitmap.Assign(Icon);
 end;
 
-function TImageFXGR32.LoadFromFileExtension(aFilename : string; LargeIcon : Boolean) : IImageFX;
+function TImageFXGR32.LoadFromFileExtension(const aFilename : string; LargeIcon : Boolean) : IImageFX;
 var
   icon : TIcon;
   aInfo : TSHFileInfo;
@@ -1080,7 +1079,7 @@ begin
   end;
 end;
 
-procedure TImageFXGR32.SaveToPNG(outfile : string);
+procedure TImageFXGR32.SaveToPNG(const outfile : string);
 var
   png : TPngImage;
 begin
@@ -1094,7 +1093,7 @@ begin
   LastResult := arOk;
 end;
 
-procedure TImageFXGR32.SaveToJPG(outfile : string);
+procedure TImageFXGR32.SaveToJPG(const outfile : string);
 var
   jpg : TJPEGImage;
 begin
@@ -1108,7 +1107,7 @@ begin
   LastResult := arOk;
 end;
 
-procedure TImageFXGR32.SaveToBMP(outfile : string);
+procedure TImageFXGR32.SaveToBMP(const outfile : string);
 var
   bmp : TBitmap;
 begin
@@ -1122,7 +1121,7 @@ begin
   LastResult := arOk;
 end;
 
-procedure TImageFXGR32.SaveToGIF(outfile : string);
+procedure TImageFXGR32.SaveToGIF(const outfile : string);
 var
   gif : TGIFImage;
 begin

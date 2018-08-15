@@ -7,7 +7,7 @@
   Author      : Kike P�rez
   Version     : 4.0
   Created     : 10/04/2016
-  Modified    : 27/05/2018
+  Modified    : 11/08/2018
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -89,19 +89,19 @@ type
   public
     property Pixel[const x, y: Integer]: TPixelInfo read GetPixel write SetPixel;
     constructor Create; overload; override;
-    constructor Create(fromfile : string); overload; override;
+    constructor Create(const fromfile : string); overload; override;
     destructor Destroy; override;
     function NewBitmap(w, h : Integer) : IImageFX; overload;
     function NewBitmap(w, h: Integer; Depth : Integer; nChannels : Integer): IImageFX; overload;
-    function LoadFromFile(fromfile : string; CheckIfFileExists : Boolean = False) : IImageFX;
-    function LoadFromFile2(fromfile : string; CheckIfFileExists : Boolean = False) : IImageFX;
+    function LoadFromFile(const fromfile : string; CheckIfFileExists : Boolean = False) : IImageFX;
+    function LoadFromFile2(const fromfile : string; CheckIfFileExists : Boolean = False) : IImageFX;
     function LoadFromStream(stream : TStream) : IImageFX;
-    function LoadFromString(str : string) : IImageFX;
+    function LoadFromString(const str : string) : IImageFX;
     function LoadFromImageList(imgList : TImageList; ImageIndex : Integer) : IImageFX;
     function LoadFromIcon(Icon : TIcon) : IImageFX;
-    function LoadFromFileIcon(FileName : string; IconIndex : Word) : IImageFX;
-    function LoadFromFileExtension(aFilename : string; LargeIcon : Boolean) : IImageFX;
-    function LoadFromResource(ResourceName : string) : IImageFX;
+    function LoadFromFileIcon(const FileName : string; IconIndex : Word) : IImageFX;
+    function LoadFromFileExtension(const aFilename : string; LargeIcon : Boolean) : IImageFX;
+    function LoadFromResource(const ResourceName : string) : IImageFX;
     function LoadFromImage(image : pIplImage) : IImageFX;
     procedure GetResolution(var x,y : Integer); overload;
     function AspectRatio : Double;
@@ -139,10 +139,10 @@ type
     function Rounded(RoundLevel : Integer = 27) : IImageFX;
     function AntiAliasing : IImageFX;
     function SetAlpha(Alpha : Byte) : IImageFX;
-    procedure SaveToPNG(outfile : string);
-    procedure SaveToJPG(outfile : string);
-    procedure SaveToBMP(outfile : string);
-    procedure SaveToGIF(outfile : string);
+    procedure SaveToPNG(const outfile : string);
+    procedure SaveToJPG(const outfile : string);
+    procedure SaveToBMP(const outfile : string);
+    procedure SaveToGIF(const outfile : string);
     function AsImage : pIplImage;
     function AsBitmap : TBitmap;
     function AsPNG : TPngImage;
@@ -165,7 +165,7 @@ begin
   fOCVImage := nil;
 end;
 
-constructor TImageFXOpenCV.Create(fromfile: string);
+constructor TImageFXOpenCV.Create(const fromfile: string);
 begin
   Create;
   LoadFromFile(fromfile);
@@ -236,7 +236,7 @@ begin
   end;
 end;}
 
-function TImageFXOpenCV.LoadFromFile(fromfile: string; CheckIfFileExists : Boolean = False) : IImageFX;
+function TImageFXOpenCV.LoadFromFile(const fromfile: string; CheckIfFileExists : Boolean = False) : IImageFX;
 var
   fs : TFileStream;
 begin
@@ -266,7 +266,7 @@ begin
   else LastResult := arOk;
 end;
 
-function TImageFXOpenCV.LoadFromFile2(fromfile: string; CheckIfFileExists : Boolean = False) : IImageFX;
+function TImageFXOpenCV.LoadFromFile2(const fromfile: string; CheckIfFileExists : Boolean = False) : IImageFX;
 begin
   Result := Self;
 
@@ -326,7 +326,7 @@ begin
   LastResult := arOk;
 end;
 
-function TImageFXOpenCV.LoadFromString(str: string) : IImageFX;
+function TImageFXOpenCV.LoadFromString(const str: string) : IImageFX;
 var
   stream : TStringStream;
 begin
@@ -338,17 +338,16 @@ begin
     Exit;
   end;
 
-  str := Base64Decode(str);
-  stream := TStringStream.Create(str);
+  stream := TStringStream.Create(Base64Decode(str));
   try
-    Self.LoadFromStream(stream);
+    LoadFromStream(stream);
     LastResult := arOk;
   finally
     stream.Free;
   end;
 end;
 
-function TImageFXOpenCV.LoadFromFileIcon(FileName : string; IconIndex : Word) : IImageFX;
+function TImageFXOpenCV.LoadFromFileIcon(const FileName : string; IconIndex : Word) : IImageFX;
 var
    Icon : TIcon;
 begin
@@ -363,7 +362,7 @@ begin
   end;
 end;
 
-function TImageFXOpenCV.LoadFromResource(ResourceName : string) : IImageFX;
+function TImageFXOpenCV.LoadFromResource(const ResourceName : string) : IImageFX;
 var
    icon : TIcon;
    //GPBitmap : TGPBitmap;
@@ -420,7 +419,7 @@ begin
 end;
 
 
-function TImageFXOpenCV.LoadFromFileExtension(aFilename : string; LargeIcon : Boolean) : IImageFX;
+function TImageFXOpenCV.LoadFromFileExtension(const aFilename : string; LargeIcon : Boolean) : IImageFX;
 var
   icon : TIcon;
   aInfo : TSHFileInfo;
@@ -1133,28 +1132,28 @@ begin
   end;
 end;
 
-procedure TImageFXOpenCV.SaveToPNG(outfile : string);
+procedure TImageFXOpenCV.SaveToPNG(const outfile : string);
 begin
   LastResult := arConversionError;
   cvvSaveImage(AsPAnsiChar(outfile),fOCVImage);
   LastResult := arOk;
 end;
 
-procedure TImageFXOpenCV.SaveToJPG(outfile : string);
+procedure TImageFXOpenCV.SaveToJPG(const outfile : string);
 begin
   LastResult := arConversionError;
   cvSaveImage(AsPAnsiChar(outfile),fOCVImage);
   LastResult := arOk;
 end;
 
-procedure TImageFXOpenCV.SaveToBMP(outfile : string);
+procedure TImageFXOpenCV.SaveToBMP(const outfile : string);
 begin
   LastResult := arConversionError;
   cvSaveImage(AsPAnsiChar(outfile),fOCVImage);
   LastResult := arOk;
 end;
 
-procedure TImageFXOpenCV.SaveToGIF(outfile : string);
+procedure TImageFXOpenCV.SaveToGIF(const outfile : string);
 begin
   LastResult := arConversionError;
   cvSaveImage(AsPAnsiChar(outfile),fOCVImage);

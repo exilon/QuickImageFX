@@ -7,7 +7,7 @@
   Author      : Kike Pérez
   Version     : 4.0
   Created     : 21/11/2017
-  Modified    : 27/05/2018
+  Modified    : 11/08/2018
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -51,15 +51,15 @@ type
   ['{58BC1417-EC58-472E-A503-92B199C21AE8}']
     function ResizeOptions : TResizeOptions;
     function NewBitmap(w,h : Integer) : IImageFX;
-    function LoadFromFile(fromfile : string; CheckIfFileExists : Boolean = False) : IImageFX;
+    function LoadFromFile(const fromfile : string; CheckIfFileExists : Boolean = False) : IImageFX;
     function LoadFromStream(stream : TStream) : IImageFX;
-    function LoadFromString(str : string) : IImageFX;
+    function LoadFromString(const str : string) : IImageFX;
     function LoadFromImageList(imgList : TImageList; ImageIndex : Integer) : IImageFX;
     function LoadFromIcon(Icon : TIcon) : IImageFX;
-    function LoadFromFileIcon(FileName : string; IconIndex : Word) : IImageFX;
-    function LoadFromFileExtension(aFilename : string; LargeIcon : Boolean) : IImageFX;
-    function LoadFromResource(ResourceName : string) : IImageFX;
-    function LoadFromHTTP(urlImage : string; out HTTPReturnCode : Integer; RaiseExceptions : Boolean = False) : IImageFX;
+    function LoadFromFileIcon(const FileName : string; IconIndex : Word) : IImageFX;
+    function LoadFromFileExtension(const aFilename : string; LargeIcon : Boolean) : IImageFX;
+    function LoadFromResource(const ResourceName : string) : IImageFX;
+    function LoadFromHTTP(const urlImage : string; out HTTPReturnCode : Integer; RaiseExceptions : Boolean = False) : IImageFX;
     procedure GetResolution(var x,y : Integer); overload;
     function GetResolution : string; overload;
     function AspectRatio : Double;
@@ -78,10 +78,10 @@ type
     function AsJPG : TJpegImage;
     function AsGIF : TGifImage;
     function AsString(imgFormat : TImageFormat = ifJPG) : string;
-    procedure SaveToPNG(outfile : string);
-    procedure SaveToJPG(outfile : string);
-    procedure SaveToBMP(outfile : string);
-    procedure SaveToGIF(outfile : string);
+    procedure SaveToPNG(const outfile : string);
+    procedure SaveToJPG(const outfile : string);
+    procedure SaveToBMP(const outfile : string);
+    procedure SaveToGIF(const outfile : string);
     procedure SaveToStream(stream : TStream; imgFormat : TImageFormat = ifJPG);
     function Resize(w, h : Integer) : IImageFX; overload;
     function Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : IImageFX; overload;
@@ -117,10 +117,10 @@ type
     fHTTPOptions : THTTPOptions;
     fLastResult : TImageActionResult;
     fExifRotation : Boolean;
-    function GetHTTPStream(urlImage: string; out HTTPReturnCode: Integer): TMemoryStream;
+    function GetHTTPStream(const urlImage: string; out HTTPReturnCode: Integer): TMemoryStream;
   public
     constructor Create; overload; virtual;
-    constructor Create(fromfile : string); overload; virtual;
+    constructor Create(const fromfile : string); overload; virtual;
     destructor Destroy; override;
     property JPGQualityPercent : TJPGQualityLevel read fJPGQualityLevel write fJPGQualityLevel;
     property PNGCompressionLevel : TPNGCompressionLevel read fPNGCompressionLevel write fPNGCompressionLevel;
@@ -137,8 +137,8 @@ type
     function FindGraphicClass(const Buffer; const BufferSize: Int64; out GraphicClass: TGraphicClass): Boolean; overload;
     function FindGraphicClass(Stream: TStream; out GraphicClass: TGraphicClass): Boolean; overload;
     function GetImageFmtExt(imgFormat : TImageFormat) : string;
-    function GetFileInfo(AExt : string; var AInfo : TSHFileInfo; ALargeIcon : Boolean = false) : boolean;
-    function LoadFromHTTP(urlImage : string; out HTTPReturnCode : Integer; RaiseExceptions : Boolean = False) : IImageFX;
+    function GetFileInfo(const AExt : string; var AInfo : TSHFileInfo; ALargeIcon : Boolean = false) : boolean;
+    function LoadFromHTTP(const urlImage : string; out HTTPReturnCode : Integer; RaiseExceptions : Boolean = False) : IImageFX;
     class function GetAspectRatio(cWidth, cHeight : Integer) : string;
     class function ColorToRGBValues(PColor: TColor) : TRGB;
     class function RGBValuesToColor(RGBValues : TRGB) : TColor;
@@ -253,7 +253,7 @@ begin
   end;
 end;
 
-function TImageFX.GetFileInfo(AExt : string; var AInfo : TSHFileInfo; ALargeIcon : Boolean = False) : Boolean;
+function TImageFX.GetFileInfo(const AExt : string; var AInfo : TSHFileInfo; ALargeIcon : Boolean = False) : Boolean;
 var uFlags : integer;
 begin
   FillMemory(@AInfo,SizeOf(TSHFileInfo),0);
@@ -264,7 +264,7 @@ begin
     else Result := True;
 end;
 
-function TImageFX.GetHTTPStream(urlImage : string; out HTTPReturnCode : Integer) : TMemoryStream;
+function TImageFX.GetHTTPStream(const urlImage : string; out HTTPReturnCode : Integer) : TMemoryStream;
 var
   http : THTTPClient;
   StatusCode : Integer;
@@ -296,7 +296,7 @@ begin
   end;
 end;
 
-function TImageFX.LoadFromHTTP(urlImage : string; out HTTPReturnCode : Integer; RaiseExceptions : Boolean = False) : IImageFX;
+function TImageFX.LoadFromHTTP(const urlImage : string; out HTTPReturnCode : Integer; RaiseExceptions : Boolean = False) : IImageFX;
 var
   http : THTTPClient;
   ms : TMemoryStream;
@@ -329,7 +329,7 @@ begin
   Result.R := (PColor shr 16) and $FF;
 end;
 
-constructor TImageFX.Create(fromfile: string);
+constructor TImageFX.Create(const fromfile: string);
 begin
   Create;
   (Self as IImageFX).LoadFromFile(fromfile);
