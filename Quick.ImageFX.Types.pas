@@ -34,7 +34,7 @@ uses
   Classes,
   SysUtils,
   Vcl.Controls,
-  Graphics,
+  Vcl.Graphics,
   Vcl.Imaging.pngimage,
   Vcl.Imaging.jpeg,
   Vcl.Imaging.GIFImg;

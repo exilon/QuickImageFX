@@ -134,6 +134,7 @@ type
     procedure CloneValues(var ImgTarget : IImageFX);
     procedure InitBitmap(var bmp : TBitmap);
     procedure ProcessExifRotation(stream: TStream);
+    function NeedsEXIFRotation(stream: TStream) : Boolean;
     function FindGraphicClass(const Buffer; const BufferSize: Int64; out GraphicClass: TGraphicClass): Boolean; overload;
     function FindGraphicClass(Stream: TStream; out GraphicClass: TGraphicClass): Boolean; overload;
     function GetImageFmtExt(imgFormat : TImageFormat) : string;
@@ -527,6 +528,29 @@ begin
           TExifOrientation.toRightBottom : begin (Self as IImageFX).FlipX.Rotate90; end; //Mirror horizontal and rotate 90°
           TExifOrientation.toLeftBottom : (Self as IImageFX).Rotate270; //Rotate 270°
         end;
+      end;
+    end;
+  finally
+    ExifData.Free;
+  end;
+end;
+
+function TImageFX.NeedsEXIFRotation(stream: TStream) : Boolean;
+var
+  ExifData : TExifData;
+begin
+  Result := False;
+  stream.Seek(soFromBeginning,0);
+  ExifData := TExifData.Create;
+  try
+    if ExifData.IsSupportedGraphic(stream) then
+    begin
+      stream.Seek(soFromBeginning,0);
+      ExifData.LoadFromGraphic(stream);
+      ExifData.EnsureEnumsInRange := False;
+      if not ExifData.Empty then
+      begin
+        if (ExifData.Orientation <> TExifOrientation.toUndefined) and (ExifData.Orientation <> TExifOrientation.toTopLeft) then Result := True;
       end;
     end;
   finally
