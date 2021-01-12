@@ -1,13 +1,13 @@
 ﻿{ ***************************************************************************
 
-  Copyright (c) 2013-2018 Kike P�rez
+  Copyright (c) 2013-2020 Kike P�rez
 
   Unit        : Quick.ImageFX.GDI
   Description : Image manipulation with multiple graphic libraries
   Author      : Kike P�rez
   Version     : 4.0
   Created     : 10/05/2013
-  Modified    : 11/08/2018
+  Modified    : 11/01/2020
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -874,49 +874,19 @@ procedure TImageFXGDI.SaveToStream(stream : TStream; imgFormat : TImageFormat = 
 var
   graf : TGraphic;
 begin
-  if stream.Position > 0 then stream.Seek(0,soBeginning);
-
-  case imgFormat of
-    ifBMP:
-      begin
-        graf := TBitmap.Create;
-        try
-          graf := Self.AsBitmap;
-          graf.SaveToStream(stream);
-        finally
-          graf.Free;
-        end;
-      end;
-    ifJPG:
-      begin
-        graf := TJPEGImage.Create;
-        try
-          graf := Self.AsJPG;
-          graf.SaveToStream(stream);
-        finally
-          graf.Free;
-        end;
-      end;
-    ifPNG:
-      begin
-        graf := TPngImage.Create;
-        try
-          graf := Self.AsPNG;
-          graf.SaveToStream(stream);
-        finally
-          graf.Free;
-        end;
-      end;
-    ifGIF:
-      begin
-        graf := TGIFImage.Create;
-        try
-          graf := Self.AsGIF;
-          graf.SaveToStream(stream);
-        finally
-          graf.Free;
-        end;
-      end;
+  stream.Size:= 0;
+  graf := nil;
+  try
+    case imgFormat of
+      ifBMP: graf := Self.AsBitmap;
+      ifJPG: graf := Self.AsJPG;
+      ifPNG: graf := Self.AsPNG;
+      ifGIF: graf := Self.AsGIF;
+      else raise Exception.Create('SaveToStream format not supported!');
+    end;
+    graf.SaveToStream(stream);
+  finally
+    graf.Free;
   end;
 end;
 
