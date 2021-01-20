@@ -1104,41 +1104,18 @@ var
 begin
   if stream.Position > 0 then stream.Seek(0,soBeginning);
 
-  case imgFormat of
-    ifBMP:
-      begin
-        graf := TBitmap.Create;
-        try
-          graf := Self.AsBitmap;
-          graf.SaveToStream(stream);
-        finally
-          graf.Free;
-        end;
-      end;
-    ifJPG:
-      begin
-        graf := TJPEGImage.Create;
-        try
-          graf := Self.AsJPG;
-          graf.SaveToStream(stream);
-        finally
-          graf.Free;
-        end;
-      end;
-    ifPNG:
-      begin
-        graf := TPngImage.Create;
-        try
-          graf := Self.AsPNG;
-          graf.SaveToStream(stream);
-        finally
-          graf.Free;
-        end;
-      end;
-    ifGIF:
-      begin
-        SaveImageToStream('gif',stream,fpImage^);
-      end;
+  graf := nil;
+  try
+    case imgFormat of
+      ifBMP: graf := Self.AsBitmap;
+      ifJPG: graf := Self.AsJPG;
+      ifPNG: graf := Self.AsPNG;
+      ifGIF: SaveImageToStream('gif',stream,fpImage^);
+      else raise Exception.Create('SaveToStream format not supported!');
+    end;
+    graf.SaveToStream(stream);
+  finally
+    graf.Free;
   end;
 end;
 
