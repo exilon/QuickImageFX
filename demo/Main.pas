@@ -15,8 +15,6 @@ uses
   Vcl.StdCtrls,
   Vcl.ExtCtrls,
   Vcl.Mask,
-  JvExMask,
-  JvToolEdit,
   Vcl.Samples.Spin,
   Vcl.Buttons,
   PngSpeedButton,
@@ -30,7 +28,7 @@ uses
   Quick.ImageFX.GDI,
   Quick.ImageFX.GR32,
   Quick.ImageFX.OpenCV,
-  Quick.ImageFX.Vampyre;
+  Quick.ImageFX.Vampyre, JvExMask, JvToolEdit;
 
   //Needs Quick.Chrono from QuickLibs https://github.com/exilon/QuickLibs
 
