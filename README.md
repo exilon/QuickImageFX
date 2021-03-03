@@ -187,6 +187,6 @@ ImageFX.Rotate90.FlipX.GrayScale.SaveToPNG('.\myfile.png');
 MyImage.Picture.Asssign(ImageFX.LoadFromFile('.\myfile.jpg').Rotate180.Resize(100,100).AsBitmap);
 ```
 
-Do you want learn delphi? [learndelphi.org](https://learndelphi.org)
+>Do you want to learn delphi or improve your skills? [learndelphi.org](https://learndelphi.org)
 
 
