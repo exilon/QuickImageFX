@@ -604,7 +604,7 @@ begin
                              PAnsiChar('xres'), 300.0, // Horizontal resolution in pixels/mm
                              PAnsiChar('yres'), 300.0, // Vertical resolution in pixels/mm
                              PAnsiChar('bigtiff'), 1, //(gboolean) Enable writing a BigTiff file
-                             PAnsiChar('properties'), 1, //(gboolean) Enable writing an IMAGEDESCRIPTION tag
+                             PAnsiChar('properties'), 0, //(gboolean) Enable writing an IMAGEDESCRIPTION tag
                              PAnsiChar('region_shrink'), TVipsRegionShrink.VIPS_REGION_SHRINK_MAX, // How to shrink each 2x2 region
                              PAnsiChar('level'), 9, //(int) Zstd compression level
                              PAnsiChar('lossless'), 0, //(gboolean) WebP lossless mode
@@ -866,14 +866,15 @@ begin
       else raise Exception.Create('Unknown image format for output!');
     end;
 
-    if (buf = nil) or (len =0) then raise Exception.Create('Buffer error!');
+    if (buf = nil) or (len = 0) then raise Exception.Create('Buffer error!');
 
     aStream.WriteBuffer(buf^,len);
     if aStream.Size = 0 then res := -1;
 
     aStream.Position := 0;
 
-    if res <> 0 then raise Exception.CreateFmt('Conversion error: %s',[vips_error_buffer()]);
+    //if res <> 0 then raise Exception.CreateFmt('Conversion error: %s',[vips_error_buffer()]);
+    if res <> 0 then raise Exception.Create('Conversion error!');
   finally
     if buf <> nil then
       g_free(buf);
@@ -955,8 +956,6 @@ begin
   fVipsImage := newImage;
 end;
 
-end.
-
 initialization
   vips_init('QuickImageFx');
   //vips_leak_set(true);
@@ -964,4 +963,6 @@ initialization
 
 finalization
   vips_shutdown;
+
+end.
 
