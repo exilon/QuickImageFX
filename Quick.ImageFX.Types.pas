@@ -74,7 +74,7 @@ type
   EImageTransformError = class(Exception);
   EImageConversionError = class(Exception);
 
-  TImageFormat = (ifBMP, ifJPG, ifPNG, ifGIF);
+  TImageFormat = (ifBMP, ifJPG, ifPNG, ifGIF, ifTIFF, ifJP2K, ifWEBP, ifHEIF, ifAVIF, ifJXL);
 
   TImageActionResult = (arNone, arAlreadyOptim, arOk, arUnknowFmtType, arUnknowError, arNoOverwrited, arResizeError, arRotateError,
                         arColorizeError,arConversionError, arFileNotExist, arZeroBytes, arCorruptedData);
@@ -106,7 +106,10 @@ type
                     rsOCVCubic,
                     rsOCVLanczos4,
                     rsVAMPBicubic,
-                    rsVAMPLanczos); //high quality - Low performance
+                    rsVAMPLanczos,
+                    rsVipsCubic,
+                    rsVipsLanczos2,
+                    rsVipsLanczos3); //high quality - Low performance
 
   TResizeOptions = class
     NoMagnify : Boolean;

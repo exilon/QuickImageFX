@@ -1,13 +1,13 @@
 { ***************************************************************************
 
-  Copyright (c) 2016-2018 Kike Pérez
+  Copyright (c) 2016-2024 Kike Pérez
 
   Unit        : Quick.ImageFX
   Description : Image manipulation
   Author      : Kike Pérez
   Version     : 4.0
   Created     : 21/11/2017
-  Modified    : 11/08/2018
+  Modified    : 16/02/2024
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -28,6 +28,8 @@
  *************************************************************************** }
 unit Quick.ImageFX;
 
+{$i QuickImageFX.inc}
+
 interface
 
 uses
@@ -35,8 +37,15 @@ uses
   System.SysUtils,
   Winapi.ShellAPI,
   Winapi.Windows,
-  Vcl.Controls,
-  Graphics,
+  {$IFNDEF HAS_FMX}
+   Vcl.Controls,
+   Vcl.Graphics,
+   {$ELSE}
+   System.UITypes,
+   FMX.Controls,
+   FMX.Graphics,
+   FMX.Types,
+   {$ENDIF}
   System.Math,
   Vcl.Imaging.pngimage,
   Vcl.Imaging.jpeg,
@@ -54,8 +63,10 @@ type
     function LoadFromFile(const fromfile : string; CheckIfFileExists : Boolean = False) : IImageFX;
     function LoadFromStream(stream : TStream) : IImageFX;
     function LoadFromString(const str : string) : IImageFX;
+    {$IFNDEF HAS_FMX}
     function LoadFromImageList(imgList : TImageList; ImageIndex : Integer) : IImageFX;
     function LoadFromIcon(Icon : TIcon) : IImageFX;
+    {$ENDIF}
     function LoadFromFileIcon(const FileName : string; IconIndex : Word) : IImageFX;
     function LoadFromFileExtension(const aFilename : string; LargeIcon : Boolean) : IImageFX;
     function LoadFromResource(const ResourceName : string) : IImageFX;
@@ -67,11 +78,19 @@ type
     function IsEmpty : Boolean;
     function Clone : IImageFX;
     function IsGray : Boolean;
+    {$IFNDEF HAS_FMX}
     procedure Assign(Graphic : TGraphic);
     function Clear(pcolor : TColor = clWhite) : IImageFX;
+    {$ELSE}
+    function Clear(pcolor : TAlphacolor = TAlphaColorRec.White) : IImageFX;
+    {$ENDIF}
+    {$IFNDEF HAS_FMX}
     function Draw(Graphic : TGraphic; x, y : Integer; alpha : Double = 1) : IImageFX; overload;
+    {$ENDIF}
     function Draw(stream : TStream; x, y : Integer; alpha : Double = 1) : IImageFX; overload;
+    {$IFNDEF HAS_FMX}
     function DrawCentered(Graphic : TGraphic; alpha : Double = 1) : IImageFX; overload;
+    {$ENDIF}
     function DrawCentered(stream: TStream; alpha : Double = 1) : IImageFX; overload;
     function AsBitmap : TBitmap;
     function AsPNG : TPngImage;
@@ -82,6 +101,7 @@ type
     procedure SaveToJPG(const outfile : string);
     procedure SaveToBMP(const outfile : string);
     procedure SaveToGIF(const outfile : string);
+    procedure SaveToFile(const outfile : string; aImgFormat : TImageFormat);
     procedure SaveToStream(stream : TStream; imgFormat : TImageFormat = ifJPG);
     function Resize(w, h : Integer) : IImageFX; overload;
     function Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : IImageFX; overload;
@@ -135,8 +155,10 @@ type
     procedure InitBitmap(var bmp : TBitmap);
     procedure ProcessExifRotation(stream: TStream);
     function NeedsEXIFRotation(stream: TStream) : Boolean;
+    {$IFNDEF HAS_FMX}
     function FindGraphicClass(const Buffer; const BufferSize: Int64; out GraphicClass: TGraphicClass): Boolean; overload;
     function FindGraphicClass(Stream: TStream; out GraphicClass: TGraphicClass): Boolean; overload;
+    {$ENDIF}
     function GetImageFmtExt(imgFormat : TImageFormat) : string;
     function GetFileInfo(const AExt : string; var AInfo : TSHFileInfo; ALargeIcon : Boolean = false) : boolean;
     function LoadFromHTTP(const urlImage : string; out HTTPReturnCode : Integer; RaiseExceptions : Boolean = False) : IImageFX;
@@ -152,6 +174,11 @@ type
     class procedure CleanTransparentPng(var png: TPngImage; NewWidth, NewHeight: Integer);
     function JPEGCorruptionCheck(jpg : TJPEGImage): Boolean; overload;
     function JPEGCorruptionCheck(const stream : TMemoryStream): Boolean; overload;
+    procedure SaveToBMP(const outfile : string); virtual; abstract;
+    procedure SaveToGIF(const outfile : string); virtual; abstract;
+    procedure SaveToJPG(const outfile : string); virtual; abstract;
+    procedure SaveToPNG(const outfile : string); virtual; abstract;
+    procedure SaveToFile(const outfile: string; aImgFormat: TImageFormat); virtual;
     class procedure AutoCropBitmap(var bmp : TBitmap; aColor : TColor);
   end;
 
@@ -173,7 +200,11 @@ begin
   fResizeOptions.ResamplerMode := rsAuto;
   fResizeOptions.Center := False;
   fResizeOptions.FillBorders := False;
+  {$IFNDEF HAS_FMX}
   fResizeOptions.BorderColor := clWhite;
+  {$ELSE}
+  fResizeOptions.BorderColor := TColorRec.White;
+  {$ENDIF}
   fResizeOptions.SkipSmaller := False;
   HTTPOptions := THTTPOptions.Create;
   HTTPOptions.UserAgent := DEF_USERAGENT;
@@ -192,6 +223,14 @@ begin
   inherited;
 end;
 
+{$IFDEF HAS_FMX}
+function ColorToRGB(aColor : TColor) : Integer;
+begin
+  Result := TColorRec.ColorToRGB(aColor);
+end;
+{$ENDIF}
+
+{$IFNDEF HAS_FMX}
 function TImageFX.FindGraphicClass(const Buffer; const BufferSize: Int64; out GraphicClass: TGraphicClass): Boolean;
 var
   LongWords: array[Byte] of LongWord absolute Buffer;
@@ -211,7 +250,7 @@ begin
       else if LongWords[0] = $9AC6CDD7 then GraphicClass := TMetafile
        else if (LongWords[0] = 1) and (LongWords[10] = $464D4520) then GraphicClass := TMetafile
         else if StrLComp(PAnsiChar(@Buffer), 'GIF', 3) = 0 then GraphicClass := TGIFImage
-         else if Words[1] = 1 then GraphicClass := TIcon;
+         else if Words[1] = 1 then GraphicClass := TIcon
     end;
   end;
   Result := (GraphicClass <> nil);
@@ -242,6 +281,7 @@ begin
     end;
   end;
 end;
+{$ENDIF}
 
 function TImageFX.GetImageFmtExt(imgFormat : TImageFormat) : string;
 begin
@@ -299,7 +339,6 @@ end;
 
 function TImageFX.LoadFromHTTP(const urlImage : string; out HTTPReturnCode : Integer; RaiseExceptions : Boolean = False) : IImageFX;
 var
-  http : THTTPClient;
   ms : TMemoryStream;
 begin
   Result := (Self as IImageFX);
@@ -419,9 +458,11 @@ end;
 
 procedure TImageFX.InitBitmap(var bmp: TBitmap);
 begin
+  {$IFNDEF HAS_FMX}
   bmp.PixelFormat := pf32bit;
   bmp.HandleType := bmDIB;
   bmp.AlphaFormat := afDefined;
+  {$ENDIF}
 end;
 
 //gets a more dark color
@@ -596,8 +637,13 @@ var
   RowClean: Boolean;
   LastClean: Boolean;
 begin
+  {$IFNDEF HAS_FMX}
   if ABitmap.PixelFormat <> pf24bit then
     raise Exception.Create('Incorrect bit depth, bitmap must be 24-bit!');
+  {$ELSE}
+  if ABitmap.PixelFormat <> TPixelformat.RG32F then
+    raise Exception.Create('Incorrect bit depth, bitmap must be 32-bit!');
+  {$ENDIF}
 
   LastClean := False;
   Result := Rect(ABitmap.Width, ABitmap.Height, 0, 0);
@@ -671,6 +717,17 @@ begin
 
   ar := GCD(cWidth,cHeight);
   Result := Format('%d:%d',[cWidth div ar, cHeight div ar]);
+end;
+
+procedure TImageFX.SaveToFile(const outfile: string; aImgFormat: TImageFormat);
+begin
+  case aImgFormat of
+    TImageFormat.ifBMP : Self.SaveToBMP(outfile);
+    TImageFormat.ifJPG : Self.SaveToJPG(outfile);
+    TImageFormat.ifPNG : Self.SaveToPNG(outfile);
+    TImageFormat.ifGIF : Self.SaveToGIF(outfile);
+    else raise Exception.CreateFmt('%s engine not supports this output format!',[Self.ClassName]);
+  end;
 end;
 
 end.
