@@ -653,7 +653,6 @@ type
 var
   X: Integer;
   Y: Integer;
-  Gray: Byte;
   Pixel: PPixelRec;
 begin
   Result := Self;
@@ -688,7 +687,6 @@ type
 var
   X: Integer;
   Y: Integer;
-  Gray: Byte;
   Pixel: PPixelRec;
 begin
   Result := Self;
@@ -810,7 +808,6 @@ type
 var
   X: Integer;
   Y: Integer;
-  Gray: Byte;
   Pixel: PPixelRec;
 begin
   Assert(fBitmap.PixelFormat = pf32Bit);
@@ -1504,8 +1501,6 @@ end;
 function TImageFXGDI.Draw(stream: TStream; x, y : Integer; alpha: Double = 1) : IImageFX;
 var
   overlay : TGraphic;
-  Buffer : TBytes;
-  Size : Int64;
 begin
   //get overlay image
   overlay := TGraphic.Create;

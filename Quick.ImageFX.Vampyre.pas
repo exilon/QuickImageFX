@@ -698,7 +698,6 @@ end;
 
 function TImageFXVampyre.Draw(Graphic : TGraphic; x, y : Integer; alpha : Double = 1) : IImageFX;
 var
-  overlay : PImageData;
   ms : TMemoryStream;
 begin
   Result := Self;

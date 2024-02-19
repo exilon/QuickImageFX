@@ -1036,7 +1036,6 @@ var
   x, y : Integer;
   srcPix : TPixelInfo;
   srcHasAlpha : Boolean;
-  RGB : TRGB;
 begin
   Result := Self;
   LastResult := arColorizeError;
@@ -1465,8 +1464,6 @@ begin
 end;
 
 function TImageFXOpenCV.AntiAliasing : IImageFX;
-var
-  bmp : TBitmap;
 begin
   Result := Self;
   //not implemented
