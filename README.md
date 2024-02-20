@@ -1,4 +1,4 @@
-﻿![alt text](QuickImageFX.png "QuickImageFx") 
+﻿![alt text](docs/QuickImageFX.png "QuickImageFx") 
 
 Delphi library for simplifying image load/save, conversion and transformation. Can load/save png, jpg, jxl, webp, avif, tiff, gif and bmp. Can get image from different resources: file, stream, http, imagelist, associated windows icon, executable file icon, etc... Rotate, flip, grayscale and many other transformations.
 GDI+, Graphics32, OpenCV, Vampyre and LibVips engines available.
@@ -9,7 +9,7 @@ Please "star" this project in GitHub! It costs nothing but helps to reference th
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=exilon/quicklib&type=Date)](https://star-history.com/#exilon/quickimagefx&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=exilon/quickimagefx&type=Date)](https://star-history.com/#exilon/quickimagefx&Date)
 
 ## Support
 If you find this project useful, please consider making a donation.
