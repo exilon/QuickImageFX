@@ -7,7 +7,7 @@
   Author      : Kike Pérez
   Version     : 1.0
   Created     : 12/10/2023
-  Modified    : 05/02/2024
+  Modified    : 20/02/2024
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -124,7 +124,7 @@ type
     procedure SaveToJPG(const outfile : string);
     procedure SaveToBMP(const outfile : string);
     procedure SaveToGIF(const outfile : string);
-    procedure SaveToFile(const outfile : string; aImgFormat : TImageFormat);
+    procedure SaveToFile(const outfile : string; aImgFormat : TImageFormat); override;
     function AsImage : pVipsImage;
     function AsBitmap : TBitmap;
     function AsPNG : TPngImage;
@@ -428,8 +428,8 @@ procedure TImageFXVips.GetResolution(var x,y : Integer);
 begin
   if Assigned(fVipsImage) then
   begin
-    x := vips_image_get_width(fVipsImage);
-    y := vips_image_get_height(fVipsImage);;
+    x := fVipsImage.Width;
+    y := fVipsImage.Height;
     LastResult := arOk;
   end
   else
@@ -719,19 +719,24 @@ function TImageFXVips.Draw(stream: TStream; x: Integer; y: Integer; alpha: Doubl
 var
   overlay : TVipsImage;
 begin
-  //get overlay image
-  stream.Seek(0,soBeginning);
-  //Size := stream.Size;
-  //SetLength(Buffer, Size);
-  //stream.ReadBuffer(Pointer(Buffer)^,Size);
-  overlay := TVipsImage.Create;
   try
-    overlay.LoadFromStream(stream);
-    overlay.Linear(alpha, 0.0);
-    fVipsImage.DrawImage(overlay,x,y,TVipsBlendMode.VIPS_BLEND_MODE_OVER);
-    //fVipsImage.DrawImage(overlay,x,y,TVipsBlendMode.VIPS_BLEND_MODE_LIGHTEN);
-  finally
-    overlay.Free;
+    //get overlay image
+    if (stream = nil) or (stream.Size = 0) then raise EArgumentException.Create('Stream cannot be empty!');
+
+    stream.Seek(0,soBeginning);
+    //Size := stream.Size;
+    //SetLength(Buffer, Size);
+    //stream.ReadBuffer(Pointer(Buffer)^,Size);
+    overlay := TVipsImage.Create;
+    try
+      overlay.LoadFromStream(stream);
+      overlay.Linear(alpha, 0.0);
+      fVipsImage.DrawImage(overlay,x,y,TVipsBlendMode.VIPS_BLEND_MODE_OVER);
+    finally
+      overlay.Free;
+    end;
+  except
+    on E : Exception do raise Exception.CreateFmt('Drawing overlay error: (%s)', [e.Message]);
   end;
 end;
 
@@ -1177,8 +1182,11 @@ procedure TImageFXVips.SaveToStream(stream : TStream; imgFormat : TImageFormat =
 begin
   if stream.Position > 0 then stream.Seek(0,soBeginning);
 
-  fVipsImage.SaveToStream(stream, TVipsImageFormat(imgFormat), JPGQualityPercent);
-
+  try
+    fVipsImage.SaveToStream(stream, TVipsImageFormat(imgFormat), JPGQualityPercent);
+  except
+    on E : Exception do raise Exception.Create('Error saving to stream');
+  end;
   //if imgFormat = ifJPG then params := [CV_IMWRITE_JPEG_QUALITY, JPGQualityPercent, 0]
   //  else if imgFormat = ifPNG then params := [CV_IMWRITE_PNG_COMPRESSION, PNGCompressionLevel, 0];
   //mat := cvEncodeImage(AsPAnsiChar(GetImageFmtExt(imgFormat)),fVipsImage,@params[0]);

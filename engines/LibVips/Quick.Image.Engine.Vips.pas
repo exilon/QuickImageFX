@@ -218,8 +218,6 @@ type
       property Width : Integer read GetWidth;
       property Height : Integer read GetHeight;
       property AutoRotate : Boolean read fAutoRotate write fAutoRotate;
-      class constructor Create;
-      class destructor Destroy;
       constructor Create; overload;
       constructor Create(aWidth, aHeight : Integer); overload;
       constructor CreateEmpty;
@@ -320,19 +318,6 @@ begin
   g_object_unref(inImage);
 end;
 
-class constructor TVipsImage.Create;
-begin
-  //vips_init('QuickImageFx');
-  //vips_block_untrusted_set(False);
-  //vips_operation_block_set('fitload',False);
-end;
-
-class destructor TVipsImage.Destroy;
-begin
-  //vips_shutdown;
-
-end;
-
 constructor TVipsImage.Create;
 begin
    fVipsImage := nil;
@@ -373,7 +358,8 @@ begin
     g_object_unref(fVipsImage);
     fVipsImage := nil;
   end;
-  if fInternalBuffer <> nil then FreeMem(fInternalBuffer);
+  if fInternalBuffer <> nil then Freemem(fInternalBuffer);
+  fInternalBuffer := nil;
   inherited;
 end;
 
@@ -410,7 +396,7 @@ begin
   
   res := vips_composite2(fVipsImage, aOverlay.GetVipsImage, newImage, mode,
       PAnsiChar('x'), x,
-      PAnsiChar('y'), y, 
+      PAnsiChar('y'), y,
       nil);
   if res <> 0 then raise Exception.CreateFmt('Error drawing image! (%s)',[vips_error_buffer()]);
   g_object_unref(fVipsImage);
@@ -535,7 +521,7 @@ end;
 
 function TVipsImage.GetVipsImage: pVipsImage;
 begin
-  Result := fVipsImage;
+  Result := @fVipsImage;
 end;
 
 procedure TVipsImage.LoadFromFile(const aFilename: string);
@@ -866,15 +852,14 @@ begin
       else raise Exception.Create('Unknown image format for output!');
     end;
 
+    if res <> 0 then raise Exception.Create('Conversion error!');
+
     if (buf = nil) or (len = 0) then raise Exception.Create('Buffer error!');
 
     aStream.WriteBuffer(buf^,len);
-    if aStream.Size = 0 then res := -1;
+    if aStream.Size = 0 then raise Exception.Create('Stream error!');
 
     aStream.Position := 0;
-
-    //if res <> 0 then raise Exception.CreateFmt('Conversion error: %s',[vips_error_buffer()]);
-    if res <> 0 then raise Exception.Create('Conversion error!');
   finally
     if buf <> nil then
       g_free(buf);
@@ -959,6 +944,8 @@ end;
 initialization
   vips_init('QuickImageFx');
   //vips_leak_set(true);
+  //vips_block_untrusted_set(False);
+  //vips_operation_block_set('fitload',False);
 
 
 finalization
