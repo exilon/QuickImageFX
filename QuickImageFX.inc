@@ -1,7 +1,7 @@
 ﻿{
     This file is part of QuickImageFX: https://github.com/exilon/QuickImageFx
 
-    QuickLibs. Copyright (C) 2020 Kike Pérez
+    QuickLibs. Copyright (C) 2024 Kike Pérez
       Exilon - https://www.exilon.es
 
      ***************************************************************************
@@ -131,6 +131,20 @@
     {$if CompilerVersion >= 34.0} //Delphi RX10.4 Sydney
       {$define DELPHIRX104_UP}
 	    {$define DELPHISYDNEY_UP}
+      {$if defined(ANDROID) OR defined(IOS)}
+        {$define NEXTGEN} //compatibility with older delphis
+      {$endif}
+    {$ifend}
+    {$if CompilerVersion >= 35.0} //Delphi RX10.4 Alexandria
+      {$define DELPHIRX11_UP}
+	    {$define DELPHIALEXANDRIA_UP}
+      {$if defined(ANDROID) OR defined(IOS)}
+        {$define NEXTGEN} //compatibility with older delphis
+      {$endif}
+    {$ifend}
+    {$if CompilerVersion >= 36.0} //Delphi RX12 Anthens
+      {$define DELPHIRX12_UP}
+	    {$define DELPHIATHENS_UP}
       {$if defined(ANDROID) OR defined(IOS)}
         {$define NEXTGEN} //compatibility with older delphis
       {$endif}

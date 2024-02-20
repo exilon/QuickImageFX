@@ -2,7 +2,12 @@
 ----------
 
 
-Delphi library for simplifying image load/save, conversion and transformation. Can load/save png, jpg, gif and bmp. Can get image from different resources: file, stream, http, imagelist, associated windows icon, executable file icon, etc... Rotate, flip, grayscale and many other transformations.
+Delphi library for simplifying image load/save, conversion and transformation. Can load/save png, jpg, jxl, webp, avif, tiff, gif and bmp. Can get image from different resources: file, stream, http, imagelist, associated windows icon, executable file icon, etc... Rotate, flip, grayscale and many other transformations.
+GDI+, Graphics32, OpenCV, Vampyre and LibVips engines available.
+
+*NEW: Delphi 12 Athens support
+
+*NEW: LibVips engine added
 
 *NEW: Interface based
 
@@ -44,7 +49,15 @@ You can select one or more of the available engines ImageFX supports. Add one or
     Needed libraries:  
 	
 	- QuickLibs from Exilon (https://github.com/exilon/QuickLibs)
-	- Vampyre-Imaging from Marek Mauder (https://github.com/galfar/imaginglib.git) 
+	- Vampyre-Imaging from Marek Mauder (https://github.com/libvips/libvips/releases/tag/v8.15.1) 
+	- CCR-Exif from Chris Rolliston (https://code.google.com/archive/p/ccr-exif)
+
+- **Quick.ImageFX.Vips:** LibVips Imaging Library Engine. Uses a thrid party delphi warper for LibVips library. Ultra fast and supports many image formats like Webp, Avif, JXL, etc.
+	
+    Needed libraries:  
+	
+	- QuickLibs from Exilon (https://github.com/exilon/QuickLibs)
+	- LibVips from libVips (https://github.com/galfar/imaginglib.git) (Download needed dll's from releases zone)
 	- CCR-Exif from Chris Rolliston (https://code.google.com/archive/p/ccr-exif)
 
 
