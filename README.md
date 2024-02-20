@@ -1,9 +1,20 @@
-﻿## QuickImageFX
-----------
-
+﻿![alt text](docs/QuickImageFX.png "QuickImageFx") 
 
 Delphi library for simplifying image load/save, conversion and transformation. Can load/save png, jpg, jxl, webp, avif, tiff, gif and bmp. Can get image from different resources: file, stream, http, imagelist, associated windows icon, executable file icon, etc... Rotate, flip, grayscale and many other transformations.
 GDI+, Graphics32, OpenCV, Vampyre and LibVips engines available.
+
+## Give it a star
+Please "star" this project in GitHub! It costs nothing but helps to reference the code.
+![alt text](docs/githubstartme.jpg "Give it a star")
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=exilon/quicklib&type=Date)](https://star-history.com/#exilon/quickimagefx&Date)
+
+## Support
+If you find this project useful, please consider making a donation.
+
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/donate/?hosted_button_id=BKLKPNEYKSBKL)
 
 *NEW: Delphi 12 Athens support
 
