@@ -1,6 +1,43 @@
+﻿{ ***************************************************************************
+
+  Copyright (c) 2023-2024 Kike Pérez
+
+  Unit        : Quick.ImageFX.Engine.Vips
+  Description : Image manipulation with LibVips
+  Author      : Kike Pérez
+  Version     : 1.0
+  Created     : 12/10/2023
+  Modified    : 28/02/2024
+
+  This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
+
+  Third-party libraries used:
+    LibVips (https://github.com/libvips/libvips)
+    CCR-Exif from Chris Rolliston (https://code.google.com/archive/p/ccr-exif)
+
+ ***************************************************************************
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+ *************************************************************************** }
+
 unit Quick.Image.Engine.Vips;
 
+{$i QuickImageFX.inc}
+
 interface
+
+{.$DEFINE DEBUG_LIB}
 
 uses
   Classes,
@@ -25,7 +62,7 @@ type
     VIPS_FOREIGN_TIFF_COMPRESSION_WEBP,    // WEBP compression
     VIPS_FOREIGN_TIFF_COMPRESSION_ZSTD,    // ZSTD compression
     VIPS_FOREIGN_TIFF_COMPRESSION_JP2K,    // JP2K compression
-    VIPS_FOREIGN_TIFF_COMPRESSION_LAST     // �ltimo valor de la enumeraci�n
+    VIPS_FOREIGN_TIFF_COMPRESSION_LAST     // Último valor de la enumeración
   );
 
   TVipsForeignTiffPredictor = (
@@ -208,9 +245,13 @@ type
       fVipsImage : pVipsImage;
       fAutorotate : Boolean;
       fInternalBuffer : Pointer;
+      {$IFDEF DEBUG_LIB}
+      procedure DebugPointer(const aMsg : string; aPointer : Pointer);
+      {$ENDIF}
       function GetWidth : Integer;
       function GetHeight : Integer;
-      procedure FreePreviousImage;
+      procedure FreeCurrentImage;
+      procedure AssignImage(aNewImage : PVipsImage);
       procedure AllocateInternalBuffer(aSize : Cardinal);
       class function ColorToRGBValues(PColor: TColor): TRGB;
       class function ColorToVipsColor(PColor: TColor): TVipsArrayDouble;
@@ -225,6 +266,7 @@ type
       constructor CreateFromFile(const aFilename : string);
       destructor Destroy; override;
       function GetVipsImage : pVipsImage;
+      function IsNullOrEmpty : Boolean;
       procedure LoadFromFile(const aFilename : string);
       procedure LoadFromStream(aStream : TStream);
       procedure SaveToFile(const aFileName: string; aImageFormat: TVipsImageFormat; aQuality : Integer = 75);
@@ -251,9 +293,16 @@ type
   function vips_init(argv0: PAnsiChar): Integer; cdecl; external 'libvips-42.dll';
   procedure vips_shutdown; cdecl; external 'libvips-42.dll';
   procedure vips_leak_set(aLeak : Boolean); cdecl; external 'libvips-42.dll';
-  procedure vips_operation_block_set(setname : PAnsichar; aEnable : Boolean);cdecl; external 'libvips-42.dll';
-  procedure vips_block_untrusted_set(aEnable : Boolean);cdecl; external 'libvips-42.dll';
-  function vips_tracked_get_mem : Integer;cdecl; external 'libvips-42.dll';
+  procedure vips_operation_block_set(setname : PAnsichar; aEnable : Boolean); cdecl; external 'libvips-42.dll';
+  procedure vips_block_untrusted_set(aEnable : Boolean); cdecl; external 'libvips-42.dll';
+  function vips_tracked_get_mem : Integer; cdecl; external 'libvips-42.dll';
+  procedure vips_cache_print; cdecl; external 'libvips-42.dll';
+  procedure vips_cache_set_max (max : Cardinal); cdecl; external 'libvips-42.dll';
+  procedure vips_cache_set_max_mem (maxMem : Cardinal); cdecl; external 'libvips-42.dll';
+  function vips_cache_get_max : Integer; cdecl; external 'libvips-42.dll';
+  function vips_cache_get_size : Cardinal; cdecl; external 'libvips-42.dll';
+  procedure vips_cache_set_trace(trace : Boolean); cdecl; external 'libvips-42.dll';
+  procedure vips_cache_drop_all; cdecl; external 'libvips-42.dll';
   function vips_image_new : pVipsImage; cdecl; external 'libvips-42.dll';
   function vips_image_new_memory : pVipsImage; cdecl; external 'libvips-42.dll';
   function vips_image_new_matrix(aWidth, Height : Integer) : pVipsImage; cdecl; external 'libvips-42.dll';
@@ -302,6 +351,7 @@ type
   function vips_linear1(inImage: pVipsImage; out outImage: pVipsImage; a, b: Double; args : Pointer): Integer; cdecl; varargs; external 'libvips-42.dll';
   function vips_colourspace(inputImage: pVipsImage; out outputImage: pVipsImage; space: TVipsInterpretation): Integer; cdecl; varargs; external 'libvips-42.dll';
   function vips_autorot(inputImage : pVipsImage; out outputImage: pVipsImage; args : Pointer): Integer; cdecl; varargs; external 'libvips-42.dll';
+  procedure vips_image_free_buffer(inImage : pVipsImage; var buffer : Pointer); cdecl; varargs; external 'libvips-42.dll';
 
   function vips_error_buffer(): PAnsiChar; cdecl; external 'libvips-42.dll';
   procedure vips_error_clear(); cdecl; external 'libvips-42.dll';
@@ -313,14 +363,10 @@ implementation
 
 { TVipsImage }
 
-procedure vips_object_unref_ex(inImage : pVipsImage);
-begin
-  g_object_unref(inImage);
-end;
-
 constructor TVipsImage.Create;
 begin
    fVipsImage := nil;
+   fInternalBuffer := nil;
    fAutoRotate := True;
 end;
 
@@ -351,15 +397,33 @@ begin
   fVipsImage := aVipsImage.GetVipsImage;
 end;
 
+{$IFDEF DEBUG_LIB}
+procedure TVipsImage.DebugPointer(const aMsg : string; aPointer : Pointer);
+begin
+  if aPointer <> nil then Writeln(aMsg + ': ', IntToHex(UIntPtr(aPointer)))
+    else Writeln(aMsg + ': Is nil');
+end;
+{$ENDIF}
+
 destructor TVipsImage.Destroy;
 begin
-  if fVipsImage <> nil then
+  {$IFDEF DEBUG_LIB}
+  DebugPointer('Destroy => of fVipsImage',fVipsImage);
+  {$ENDIF}
+  FreeCurrentImage;
+  if fInternalBuffer <> nil then
   begin
-    g_object_unref(fVipsImage);
-    fVipsImage := nil;
+    {$IFDEF DEBUG_LIB}
+    DebugPointer('Destroy => Free InternalBuffer',fInternalBuffer);
+    {$ENDIF}
+    FreeMem(fInternalBuffer);
   end;
-  if fInternalBuffer <> nil then Freemem(fInternalBuffer);
   fInternalBuffer := nil;
+  {$IFDEF DEBUG_LIB}
+  vips_cache_print;
+  Writeln('CACHE SIZE: ', vips_cache_get_size);
+  Writeln('CACHE MAX: ', vips_cache_get_max);
+  {$ENDIF}
   inherited;
 end;
 
@@ -388,22 +452,29 @@ var
   res : Integer;
   newImage : pVipsImage;
   x, y : Integer;
+  overImage : pVipsImage;
 begin
+  newImage := nil;
   x := aLeft;
   y := aTop;
   if x = -1 then x := (Self.GetWidth - aOverlay.Width) Div 2;
   if y = -1 then y := (Self.GetHeight - aOverlay.Height) Div 2;
-  
-  res := vips_composite2(fVipsImage, aOverlay.GetVipsImage, newImage, mode,
+
+  overImage := vips_image_copy_memory(aOverlay.GetVipsImage);
+  {$IFDEF DEBUG_LIB}
+  DebugPointer('DrawImage => overImage',overImage);
+  {$ENDIF}
+
+  res := vips_composite2(fVipsImage, overImage , newImage, mode,
       PAnsiChar('x'), x,
       PAnsiChar('y'), y,
       nil);
+      
+  g_object_unref(overImage);
+  overImage := nil;
+      
   if res <> 0 then raise Exception.CreateFmt('Error drawing image! (%s)',[vips_error_buffer()]);
-  g_object_unref(fVipsImage);
-  fVipsImage := newImage;
-  newImage := nil;
-  //vips_object_unref(aOverlay.GetVipsImage);
-  //vips_object_unref(newImage);
+  AssignImage(newImage);
 end;
 
 procedure TVipsImage.MergeImage(aImage: TVipsImage; aDirection: TVipsDirection);
@@ -411,10 +482,10 @@ var
   res : Integer;
   newImage : pVipsImage;
 begin
+  newImage := nil;
   res := vips_join(fVipsImage, aImage.GetVipsImage, newImage, aDirection, nil);
   if res <> 0 then raise Exception.CreateFmt('Error merging image! (%s)',[vips_error_buffer()]);
-  g_object_unref(fVipsImage);
-  fVipsImage := newImage;
+  AssignImage(newImage);
 end;
 
 procedure TVipsImage.Crop(aLeft, aTop, aWidth, aHeight: Integer);
@@ -422,10 +493,10 @@ var
   res : Integer;
   newImage : pVipsImage;
 begin
+  newImage := nil;
   res := vips_crop(fVipsImage, newImage, aLeft, aTop, aWidth, aHeight, nil);
   if res <> 0 then raise Exception.CreateFmt('Error cropping image! (%s)',[vips_error_buffer()]);
-  g_object_unref(fVipsImage);
-  fVipsImage := newImage;
+  AssignImage(newImage);
 end;
 
 procedure TVipsImage.DrawRect(aLeft, aTop, aWidth, aHeight: Integer; aColor: TColor);
@@ -449,11 +520,16 @@ var
   res : Integer;
   newImage : pVipsImage;
 begin
-  //res := vips_linear1(fVipsImage, newImage, aMultiply, aAdd, nil);
+  {$IFDEF DEBUG_LIB}
+  DebugPointer('Linear => Original fVipsImage', fVipsImage);
+  {$ENDIF}
+  newImage := nil;
   res := vips_linear(fVipsImage, newImage, [1.0 , 1.0, 1.0, aMultiply], [0.0, 0.0, 0.0, aAdd], 4, nil);
   if res <> 0 then raise Exception.Create('Error aplying linear!');
-  g_object_unref(fVipsImage);
-  fVipsImage := newImage;
+  AssignImage(newImage);
+  {$IFDEF DEBUG_LIB}
+  DebugPointer('Linear => New fVipsImage', fVipsImage);
+  {$ENDIF}
 end;
 
 procedure TVipsImage.AllocateInternalBuffer(aSize: Cardinal);
@@ -461,16 +537,27 @@ begin
   GetMem(fInternalBuffer, aSize);
 end;
 
+procedure TVipsImage.AssignImage(aNewImage : PVipsImage);
+begin
+  if aNewImage = nil then raise Exception.Create('Cannot assign a nil image!');
+  FreeCurrentImage;
+  fVipsImage := aNewImage;
+  anewimage := nil;
+  {$IFDEF DEBUG_LIB}
+  DebugPointer('-AssignImage => New VipsImage',fVipsImage);
+  {$ENDIF}
+end;
+
 procedure TVipsImage.CanvasResize(aNewWidth, aNewHeight : Integer; aExtendBackground : TVipsExtend);
 var
   newImage : pVipsImage;
   x, y : Integer;
 begin
+  newImage := nil;
   x := (aNewWidth - GetWidth) Div 2;
   y := (aNewHeight - GetHeight) Div 2;
   if vips_embed(fVipsImage, newImage, x, y, aNewWidth, aNewHeight, PAnsiChar('extend'), aExtendBackground,  nil) <> 0 then raise Exception.Create('Error embeding image!');
-  g_object_unref(fVipsImage);
-  fVipsImage := newImage;
+  AssignImage(newImage);
 end;
 
 procedure TVipsImage.Clear(aColor: TColor);
@@ -492,16 +579,21 @@ var
   res : Integer;
   newImage : pVipsImage;
 begin
+  newImage := nil;
   res := vips_flip(fVipsImage,newImage,aDirection,nil);
   if res <> 0 then raise Exception.Create('Error flip image!');
-  g_object_unref(fVipsImage);
-  fVipsImage := newImage;
+  AssignImage(newImage);
 end;
 
-procedure TVipsImage.FreePreviousImage;
+procedure TVipsImage.FreeCurrentImage;
 begin
+  {$IFDEF DEBUG_LIB}
+  DebugPointer('-FreeCurrentImage => Unref fVipsImage',fVipsImage);
+  {$ENDIF}
   if fVipsImage <> nil then g_object_unref(fVipsImage);
-  if fInternalBuffer <> nil then FreeMem(fInternalBuffer);
+  fVipsImage := nil;
+  //if fInternalBuffer <> nil then FreeMem(fInternalBuffer);
+  //fInternalBuffer := nil;
 end;
 
 function TVipsImage.GetBandsCount: Integer;
@@ -521,12 +613,20 @@ end;
 
 function TVipsImage.GetVipsImage: pVipsImage;
 begin
-  Result := @fVipsImage;
+  Result := fVipsImage;
+  Exit;
+  {$IFDEF DEBUG_LIB}
+  DebugPointer('GetVipsImage => Original fVipsImage',fVipsImage);
+  {$ENDIF}
+  Result := vips_image_copy_memory(fVipsImage);
+  {$IFDEF DEBUG_LIB}
+  DebugPointer('GetVipsImage => Copy of fVipsImage',Result);
+  {$ENDIF}
 end;
 
 procedure TVipsImage.LoadFromFile(const aFilename: string);
 begin
-  FreePreviousImage;
+  FreeCurrentImage;
 
   fVipsImage := vips_image_new_from_file(PAnsiChar(AnsiString(aFilename)), nil);
   if fVipsImage = nil then raise Exception.CreateFmt('Loading error (%s)',[vips_error_buffer()]);
@@ -536,13 +636,19 @@ procedure TVipsImage.LoadFromStream(aStream: TStream);
 begin
   if aStream.Size = 0 then raise Exception.Create('Stream is empty!');
 
-  FreePreviousImage;
+  FreeCurrentImage;
 
   aStream.Position := 0;
   AllocateInternalBuffer(aStream.Size);
   aStream.ReadBuffer(fInternalBuffer^, aStream.Size);
   fVipsImage := vips_image_new_from_buffer(fInternalBuffer, aStream.Size, nil, nil);
+  {$IFDEF DEBUG_LIB}
+  DebugPointer('LoadFromStream => Internal Buffer',fInternalBuffer);
+  {$ENDIF}
   if fVipsImage = nil then raise Exception.Create(vips_error_buffer());
+  {$IFDEF DEBUG_LIB}
+  DebugPointer('LoadFromStream => New fVipsImage', fVipsImage);
+  {$ENDIF}
 end;
 
 procedure TVipsImage.SaveToFile(const aFileName: string; aImageFormat: TVipsImageFormat; aQuality : Integer = 75);
@@ -705,8 +811,11 @@ begin
   if fVipsImage = nil then raise EArgumentException.Create('Not valid pVipsImage!');
 
   aStream.Position := 0;
-  //buf := nil;
-  //len := 0;
+  buf := nil;
+  len := 0;
+  {$IFDEF DEBUG_LIB}
+  DebugPointer('SaveToStream => Current fVipsImage', fVipsImage);
+  {$ENDIF}
   try
     case aImageFormat of
       TVipsImageFormat.ifBMP :
@@ -759,7 +868,7 @@ begin
         end;
       TVipsImageFormat.ifJPEG :
         begin
-          res := vips_jpegsave_buffer(fVipsImage,buf, len,
+          res := vips_jpegsave_buffer(fVipsImage, buf, len,
                                PAnsiChar('Q'), aQuality, //(0-100) quality factor [Default 75]
                                //PAnsiChar('profile'), PAnsiChar(''), //filename of ICC profile to attach
                                //PAnsiChar('optimize_coding'), 0, //(gboolean) compute optimal Huffman coding tables
@@ -856,6 +965,10 @@ begin
 
     if (buf = nil) or (len = 0) then raise Exception.Create('Buffer error!');
 
+    {$IFDEF DEBUG_LIB}
+    DebugPointer('SaveToStream => Returned LibVips Buffer',buf);
+    {$ENDIF}
+
     aStream.WriteBuffer(buf^,len);
     if aStream.Size = 0 then raise Exception.Create('Stream error!');
 
@@ -871,31 +984,25 @@ end;
 procedure TVipsImage.Resize(aNewWidth, aNewHeight: Integer; aVipsKernel : TVipsKernel = TVipsKernel.VIPS_KERNEL_LINEAR; aGap : Double = 2.0);
 var
   newImage : Pointer;
-  //scaleWidth : Double;
-  //scaleHeight : Double;
   scale : Double;
   res : Integer;
 begin
-  //calc scale factor for w & h
-  //scaleWidth := aNewWidth / Self.Width;
-  //scaleHeight := aNewHeight / Self.Height;
-
-  //get w or h
-  //if scaleWidth > scaleHeight then
-  //  scale := scaleWidth
-  //else
-  //  scale := scaleHeight;
-
+  newImage := nil;
   scale := aNewWidth / Self.Width;
 
+  {$IFDEF DEBUG_LIB}
+  DebugPointer('Resize => Original fVipsImage', fVipsImage);
+  {$ENDIF}
   res := vips_resize(fVipsImage, newImage, scale,
                      //PAnsiChar('vscale'), 1.0, //(double) vertical scale factor
                      PAnsiChar('kernel'), aVipsKernel, //to reduce with
                      PAnsiChar('gap'), aGap, //(double) reducing gap to use [Default 2.0]
                      nil);
   if res <> 0 then raise Exception.CreateFmt('Resize error: %s',[vips_error_buffer()]);
-  g_object_unref(fVipsImage);
-  fVipsImage := newImage;
+  AssignImage(newImage);
+  {$IFDEF DEBUG_LIB}
+  DebugPointer('Resize => New fVipsImage',fVipsImage);
+  {$ENDIF}
 end;
 
 
@@ -903,9 +1010,9 @@ procedure TVipsImage.Rotate(aAngle: TVipsAngle);
 var
   newImage : Pointer;
 begin
+  newImage := nil;
   if vips_rot(fVipsImage,newImage,aAngle,nil) <> 0 then raise Exception.CreateFmt('Rotate error: %s',[vips_error_buffer()]);
-  g_object_unref(fVipsImage);
-  fVipsImage := newImage;
+  AssignImage(newImage);
 end;
 
 procedure TVipsImage.RotateByExif;
@@ -913,10 +1020,10 @@ var
   res : Integer;
   newImage : pVipsImage;
 begin
+  newImage := nil;
   res := vips_autorot(fVipsImage,newImage,nil);
   if res <> 0 then raise Exception.Create('Error rotating EXIF!');
-  g_object_unref(fVipsImage);
-  fVipsImage := newImage;
+  AssignImage(newImage);
 end;
 
 procedure TVipsImage.GrayScale;
@@ -924,26 +1031,35 @@ var
   res : Integer;
   newImage : pVipsImage;
 begin
+  newImage := nil;
   res := vips_colourspace(fVipsImage,newImage,TVipsInterpretation.VIPS_INTERPRETATION_B_W,nil);
   if res <> 0 then raise Exception.Create('Error converting to grayscale!');
-  g_object_unref(fVipsImage);
-  fVipsImage := newImage;
+  AssignImage(newImage);
 end;
 
+function TVipsImage.IsNullOrEmpty: Boolean;
+begin
+  Result := fVipsImage = nil;
+end;
 procedure TVipsImage.ColourSpace(aColourSpace: TVipsInterpretation);
 var
   res : Integer;
   newImage : pVipsImage;
 begin
+  newImage := nil;
   res := vips_colourspace(fVipsImage,newImage,aColourSpace,nil);
   if res <> 0 then raise Exception.Create('Error converting colourspace!');
-  g_object_unref(fVipsImage);
-  fVipsImage := newImage;
+  AssignImage(newImage);
 end;
 
 initialization
   vips_init('QuickImageFx');
-  //vips_leak_set(true);
+  {$IFDEF DEBUG_LIB}
+  vips_leak_set(True);
+  {$ENDIF}
+  vips_cache_set_max(5);
+  vips_cache_set_max_mem(10000);
+  //vips_cache_set_trace(True);
   //vips_block_untrusted_set(False);
   //vips_operation_block_set('fitload',False);
 

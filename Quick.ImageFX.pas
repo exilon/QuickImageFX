@@ -75,7 +75,7 @@ type
     function GetResolution : string; overload;
     function AspectRatio : Double;
     function AspectRatioStr : string;
-    function IsEmpty : Boolean;
+    function IsNullOrEmpty : Boolean;
     function Clone : IImageFX;
     function IsGray : Boolean;
     {$IFNDEF HAS_FMX}
@@ -155,6 +155,7 @@ type
     procedure InitBitmap(var bmp : TBitmap);
     procedure ProcessExifRotation(stream: TStream);
     function NeedsEXIFRotation(stream: TStream) : Boolean;
+    function IsNullOrEmpty : Boolean; virtual;
     {$IFNDEF HAS_FMX}
     function FindGraphicClass(const Buffer; const BufferSize: Int64; out GraphicClass: TGraphicClass): Boolean; overload;
     function FindGraphicClass(Stream: TStream; out GraphicClass: TGraphicClass): Boolean; overload;
@@ -348,7 +349,7 @@ begin
     ms := GetHTTPStream(urlImage,HTTPReturnCode);
     try
       (Self as IImageFX).LoadFromStream(ms);
-      if (Self as IImageFX).IsEmpty then
+      if (Self as IImageFX).IsNullOrEmpty then
       begin
         HTTPReturnCode := 500;
         if RaiseExceptions then raise Exception.Create('Unknown Format');
@@ -384,7 +385,7 @@ function TImageFX.AspectRatioStr : string;
 var
   x, y : Integer;
 begin
-  if not (Self as IImageFX).IsEmpty then
+  if not (Self as IImageFX).IsNullOrEmpty then
   begin
     (Self as IImageFX).GetResolution(x,y);
     Result := GetAspectRatio(x,y);
@@ -396,7 +397,7 @@ function TImageFX.GetResolution : string;
 var
   x, y : Integer;
 begin
-  if not (Self as IImageFX).IsEmpty then
+  if not (Self as IImageFX).IsNullOrEmpty then
   begin
     (Self as IImageFX).GetResolution(x,y);
     Result := Format('%d x %d',[x,y]);
@@ -463,6 +464,11 @@ begin
   bmp.HandleType := bmDIB;
   bmp.AlphaFormat := afDefined;
   {$ENDIF}
+end;
+
+function TImageFX.IsNullOrEmpty: Boolean;
+begin
+  Result := False;
 end;
 
 //gets a more dark color

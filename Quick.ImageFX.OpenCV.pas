@@ -139,10 +139,10 @@ type
     function Rounded(RoundLevel : Integer = 27) : IImageFX;
     function AntiAliasing : IImageFX;
     function SetAlpha(Alpha : Byte) : IImageFX;
-    procedure SaveToPNG(const outfile : string);
-    procedure SaveToJPG(const outfile : string);
-    procedure SaveToBMP(const outfile : string);
-    procedure SaveToGIF(const outfile : string);
+    procedure SaveToPNG(const outfile : string); override;
+    procedure SaveToJPG(const outfile : string); override;
+    procedure SaveToBMP(const outfile : string); override;
+    procedure SaveToGIF(const outfile : string); override;
     function AsImage : pIplImage;
     function AsBitmap : TBitmap;
     function AsPNG : TPngImage;

@@ -121,10 +121,10 @@ type
     function AsJPG : TJpegImage;
     function AsGIF : TGifImage;
     function AsString(imgFormat : TImageFormat = ifJPG) : string;
-    procedure SaveToPNG(const outfile : string);
-    procedure SaveToJPG(const outfile : string);
-    procedure SaveToBMP(const outfile : string);
-    procedure SaveToGIF(const outfile : string);
+    procedure SaveToPNG(const outfile : string); override;
+    procedure SaveToJPG(const outfile : string); override;
+    procedure SaveToBMP(const outfile : string); override;
+    procedure SaveToGIF(const outfile : string); override;
     procedure SaveToStream(stream : TStream; imgFormat : TImageFormat = ifJPG);
     function Resize(w, h : Integer) : IImageFX; overload;
     function Resize(w, h : Integer; ResizeMode : TResizeMode; ResizeFlags : TResizeFlags = []; ResampleMode : TResamplerMode = rsLinear) : IImageFX; overload;

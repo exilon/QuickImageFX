@@ -7,7 +7,7 @@
   Author      : Kike Pérez
   Version     : 1.0
   Created     : 12/10/2023
-  Modified    : 20/02/2024
+  Modified    : 27/02/2024
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -31,6 +31,8 @@
 
  *************************************************************************** }
 unit Quick.ImageFX.Vips;
+
+{$i QuickImageFX.inc}
 
 interface
 
@@ -63,6 +65,7 @@ type
     procedure DoScanlines(ScanlineMode : TScanlineMode);
     function ResizeImage(w, h : Integer; ResizeOptions : TResizeOptions) : IImageFX;
     procedure SaveToStreamWithoutCompression(stream : TStream; imgFormat : TImageFormat = ifJPG);
+    function IsEmpty: Boolean;
   protected
     function GetPixel(const x, y: Integer): TPixelInfo;
     procedure SetPixel(const x, y: Integer; const P: TPixelInfo);
@@ -74,6 +77,7 @@ type
     function Width : Integer;
     function Height : Integer;
     function NewBitmap(w, h : Integer) : IImageFX;
+    function IsNullOrEmpty : Boolean; override;
     function LoadFromFile(const fromfile : string; CheckIfFileExists : Boolean = False) : IImageFX;
     function LoadFromFile2(const fromfile : string; CheckIfFileExists : Boolean = False) : IImageFX;
     function LoadFromStream(stream : TStream) : IImageFX;
@@ -88,7 +92,6 @@ type
     function AspectRatio : Double;
     function GetPixelImage(const x, y: Integer; image : pVipsImage): TPixelInfo;
     procedure SetPixelImage(const x, y: Integer; const P: TPixelInfo; image : pVipsImage);
-    function IsEmpty : Boolean;
     function IsGray : Boolean;
     procedure Assign(Graphic : TGraphic);
     function Clear(pcolor : TColor = clNone) : IImageFX;
@@ -120,10 +123,10 @@ type
     function Rounded(RoundLevel : Integer = 27) : IImageFX;
     function AntiAliasing : IImageFX;
     function SetAlpha(Alpha : Byte) : IImageFX;
-    procedure SaveToPNG(const outfile : string);
-    procedure SaveToJPG(const outfile : string);
-    procedure SaveToBMP(const outfile : string);
-    procedure SaveToGIF(const outfile : string);
+    procedure SaveToPNG(const outfile : string); override;
+    procedure SaveToJPG(const outfile : string); override;
+    procedure SaveToBMP(const outfile : string); override;
+    procedure SaveToGIF(const outfile : string); override;
     procedure SaveToFile(const outfile : string; aImgFormat : TImageFormat); override;
     function AsImage : pVipsImage;
     function AsBitmap : TBitmap;
@@ -281,7 +284,7 @@ begin
 
   fVipsImage.LoadFromStream(stream);
 
-  if fVipsImage.GetVipsImage = nil then raise EInvalidGraphic.CreateFmt('Unknow Graphic format (%s)',[vips_error_buffer()]);
+  if fVipsImage.IsNullOrEmpty then raise EInvalidGraphic.CreateFmt('Unknow Graphic format (%s)',[vips_error_buffer()]);
 
   if ExifRotation then ProcessExifRotation(stream);
 
@@ -440,7 +443,7 @@ begin
   end;
 end;
 
-function TImageFXVips.IsEmpty: Boolean;
+function TImageFXVips.IsNullOrEmpty: Boolean;
 begin
   Result := fVipsImage = nil;
 end;
@@ -453,6 +456,7 @@ end;
 
 function TImageFXVips.Clear(pcolor : TColor = clNone) : IImageFX;
 begin
+  Result := Self;
   fVipsImage.Clear(pcolor);
   LastResult := arOk;
 end;
@@ -719,14 +723,11 @@ function TImageFXVips.Draw(stream: TStream; x: Integer; y: Integer; alpha: Doubl
 var
   overlay : TVipsImage;
 begin
+  Result := Self;
   try
     //get overlay image
     if (stream = nil) or (stream.Size = 0) then raise EArgumentException.Create('Stream cannot be empty!');
 
-    stream.Seek(0,soBeginning);
-    //Size := stream.Size;
-    //SetLength(Buffer, Size);
-    //stream.ReadBuffer(Pointer(Buffer)^,Size);
     overlay := TVipsImage.Create;
     try
       overlay.LoadFromStream(stream);
@@ -753,6 +754,11 @@ begin
   Result := Self;
   if fVipsImage <> nil then fVipsImage.Free;
   fVipsImage := TVipsImage.Create(w,h);
+end;
+
+function TImageFXVips.IsEmpty : Boolean;
+begin
+  Result := fVipsImage <> nil;
 end;
 
 function TImageFXVips.Rotate90 : IImageFX;
