@@ -234,7 +234,7 @@ begin
   //loads file into VipsImage
   fs := TFileStream.Create(fromfile,fmShareDenyWrite);
   try
-    Self.LoadFromStream(fs);
+    Result := Self.LoadFromStream(fs);
   finally
     fs.Free;
   end;
@@ -286,6 +286,7 @@ begin
 
   if fVipsImage.IsNullOrEmpty then raise EInvalidGraphic.CreateFmt('Unknow Graphic format (%s)',[vips_error_buffer()]);
 
+  //if ExifRotation then fVipsImage.RotateByExif;
   if ExifRotation then ProcessExifRotation(stream);
 
   LastResult := arOk;
@@ -765,7 +766,7 @@ function TImageFXVips.Rotate90 : IImageFX;
 begin
   Result := Self;
   LastResult := arRotateError;
-  Self.RotateBy(90);
+  fVipsImage.Rotate(TVipsAngle.VIPS_ANGLE_D90);
   LastResult := arOk;
 end;
 
@@ -788,14 +789,14 @@ end;
 function TImageFXVips.RotateBy(RoundAngle : Integer) : IImageFX;
 begin
   // do with vips_similarity()
-  raise ENotImplemented.Create('Not implemented yet!');
+  raise ENotImplemented.Create('RotateBy Not implemented yet!');
 end;
 
 
 function TImageFXVips.RotateAngle(RotAngle: Single) : IImageFX;
 begin
   // do with vips_similarity()
-  raise ENotImplemented.Create('Not implemented yet!');
+  raise ENotImplemented.Create('RotateAngle Not implemented yet!');
 end;
 
 
@@ -1186,7 +1187,7 @@ end;
 
 procedure TImageFXVips.SaveToStream(stream : TStream; imgFormat : TImageFormat = ifJPG);
 begin
-  if stream.Position > 0 then stream.Seek(0,soBeginning);
+  //if stream.Position > 0 then stream.Seek(0,soBeginning);
 
   try
     fVipsImage.SaveToStream(stream, TVipsImageFormat(imgFormat), JPGQualityPercent);
