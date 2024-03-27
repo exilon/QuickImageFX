@@ -7,7 +7,7 @@
   Author      : Kike Pérez
   Version     : 1.0
   Created     : 12/10/2023
-  Modified    : 28/02/2024
+  Modified    : 20/03/2024
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -316,6 +316,8 @@ type
   function vips_image_copy_memory(aInImage : pVipsImage) : pVipsImage; cdecl; external 'libvips-42.dll';
   function vips_image_hasalpha(aInImage: pVipsImage): Integer; cdecl; external 'libvips-42.dll';
   function vips_resize(inImage: pVipsImage; out outImage: pVipsImage; scale: Double; args : Pointer): Integer; cdecl; varargs; external 'libvips-42.dll';
+  function vips_pdfload(filename : PAnsiChar; out oVipsImage : pVipsImage; args : Pointer) : Integer; cdecl; varargs; external 'libvips-42.dll';
+  function vips_pdfload_buffer(buffer : Pointer; len : Cardinal; out oVipsImage : pVipsImage; args : Pointer) : Integer; cdecl; varargs; external 'libvips-42.dll';
   function vips_image_write_to_file(image: pVipsImage; filename: PAnsiChar; args: Pointer): Integer; cdecl; varargs; external 'libvips-42.dll';
   function vips_gifsave(inImage: pVipsImage; filename: PAnsiChar; args : Pointer) : Integer; cdecl; varargs; external 'libvips-42.dll';
   function vips_gifsave_buffer(inImage: pVipsImage; out buffer : Pointer; out len : Cardinal; args : Pointer): Integer; cdecl; varargs; external 'libvips-42.dll';
@@ -627,7 +629,6 @@ end;
 procedure TVipsImage.LoadFromFile(const aFilename: string);
 begin
   FreeCurrentImage;
-
   fVipsImage := vips_image_new_from_file(PAnsiChar(AnsiString(aFilename)), nil);
   if fVipsImage = nil then raise Exception.CreateFmt('Loading error (%s)',[vips_error_buffer()]);
 end;
@@ -871,7 +872,7 @@ begin
           res := vips_jpegsave_buffer(fVipsImage, buf, len,
                                PAnsiChar('Q'), aQuality, //(0-100) quality factor [Default 75]
                                //PAnsiChar('profile'), PAnsiChar(''), //filename of ICC profile to attach
-                               //PAnsiChar('optimize_coding'), 0, //(gboolean) compute optimal Huffman coding tables
+                               //PAnsiChar('optimize_coding'), 1, //(gboolean) compute optimal Huffman coding tables
                                //PAnsiChar('interlace'), 0, //(gboolean) write an interlaced (progressive) jpeg
                                PAnsiChar('strip'), 1, //(gboolean) remove metadata from image
                                PAnsiChar('subsample_mode'), TVipsForeignSubsample.VIPS_FOREIGN_SUBSAMPLE_AUTO, //chroma subsampling mode
