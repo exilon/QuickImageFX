@@ -635,6 +635,11 @@ begin
   end;
 
   //fVipsImage.Resize(srcRect.Width, srcRect.Height,Resampler);
+  if ResizeOptions.ResizeMode = TResizeMode.rmCropToFill then
+  begin
+    fVipsImage.Crop(srcRect.Left,srcRect.Top,srcRect.Width,srcRect.Height);
+  end;
+
   fVipsImage.Resize(nw, nh,Resampler);
 
   //ImgAux := cvCreateImage(CvSize(w,h),fVipsImage^.depth,fVipsImage^.nChannels);
