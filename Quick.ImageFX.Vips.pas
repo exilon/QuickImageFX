@@ -524,7 +524,7 @@ begin
         end;
         srcRect := Rect(0,0,Self.Width,Self.Height);
       end;
-    rmCropToFill: //preserve target aspect ratio cropping original image to fill whole size
+    rmCropToFill, rmCropToFillOnlyHeight: //preserve target aspect ratio cropping original image to fill whole size
       begin
         nw := w;
         nh := h;
@@ -594,7 +594,8 @@ begin
       else
       begin
         //all cases no resizes, but CropToFill needs to grow to fill target size
-        if ResizeOptions.ResizeMode <> rmCropToFill then
+        if (ResizeOptions.ResizeMode <> rmCropToFill)
+            and (ResizeOptions.ResizeMode <> rmCropToFillOnlyHeight) then
         begin
           if not ResizeOptions.SkipSmaller then
           begin

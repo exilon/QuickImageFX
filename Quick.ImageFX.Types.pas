@@ -1,13 +1,13 @@
 { ***************************************************************************
 
-  Copyright (c) 2016-2018 Kike Pérez
+  Copyright (c) 2016-2025 Kike Pérez
 
   Unit        : Quick.ImageFX.Types
   Description : Image manipulation with multiple graphic libraries
   Author      : Kike Pérez
   Version     : 4.0
   Created     : 10/04/2013
-  Modified    : 27/03/2018
+  Modified    : 28/04/2025
 
   This file is part of QuickImageFX: https://github.com/exilon/QuickImageFX
 
@@ -93,7 +93,8 @@ type
   TResizeMode = (rmStretch,     //stretch original image to fit target size without preserving original aspect ratio
                  rmScale,       //recalculate width or height target size to preserve original aspect ratio
                  rmCropToFill,  //preserve target aspect ratio cropping original image to fill whole size
-                 rmFitToBounds  //resize image to fit max bounds of target size
+                 rmFitToBounds,  //resize image to fit max bounds of target size
+                 rmCropToFillOnlyHeight //perserve source aspect ratio cropping original image to fill whole width size, but height can be smaller than target
                  );
 
   TResamplerMode = (rsAuto, //uses rmArea for downsampling and rmLinear for upsampling
